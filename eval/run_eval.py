@@ -37,34 +37,53 @@ def _prf(y_true: list[int], y_pred: list[int]) -> dict:
     return {"precision": round(p, 3), "recall": round(r, 3), "f1": round(f, 3)}
 
 
+PROGRESS_PATH = config.RESULTS_DIR / "eval_progress.csv"
+
+
 async def run(limit: int | None = None) -> pd.DataFrame:
     eval_set = pd.read_csv(config.EVAL_SET_PATH)
     if limit:
         eval_set = eval_set.head(limit)
     transactions = pd.read_parquet(config.TRANSACTIONS_PATH)
-    pattern_store.reset()  # start every eval from the same seed memory
 
-    y_true = eval_set["isFraud"].tolist()
-    argus_pred, base_pred, faith_scores, pattern_hits = [], [], [], 0
+    # Checkpointing: every finished alert is appended to PROGRESS_PATH, so a
+    # crashed/rate-limited run resumes where it left off instead of starting over.
+    if PROGRESS_PATH.exists():
+        done = pd.read_csv(PROGRESS_PATH)
+        print(f"resuming: {len(done)} alerts already evaluated")
+    else:
+        config.RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+        done = pd.DataFrame(columns=["txn_id", "is_fraud", "argus", "baseline", "faith",
+                                     "pattern_hit"])
+        pattern_store.reset()  # fresh run -> same seed memory every time
 
     for i, row in eval_set.iterrows():
         txn_id = int(row["txn_id"])
+        if txn_id in set(done["txn_id"].astype(int)):
+            continue
 
         case, _ = await orchestrator.triage_alert(txn_id, transactions)
-        argus_pred.append(case.disposition)
-        if case.matched_patterns:
-            pattern_hits += 1
-
         base = await baseline.classify(txn_id)
-        base_pred.append(base.disposition)
-
         faith = await judge.score_case(case)
-        faith_scores.append(faith.score)
+
+        rec = {"txn_id": txn_id, "is_fraud": int(row["isFraud"]),
+               "argus": case.disposition, "baseline": base.disposition,
+               "faith": faith.score, "pattern_hit": int(bool(case.matched_patterns))}
+        done = pd.concat([done, pd.DataFrame([rec])], ignore_index=True)
+        done.to_csv(PROGRESS_PATH, index=False)  # checkpoint after every alert
 
         print(f"[{i+1}/{len(eval_set)}] txn {txn_id}: "
               f"truth={'FRAUD' if row['isFraud'] else 'legit'} | "
               f"argus={case.disposition} | baseline={base.disposition} | "
               f"faith={faith.score:.2f}")
+
+    # Score everything evaluated so far (works for partial runs too).
+    done = done[done["txn_id"].isin(eval_set["txn_id"])]
+    y_true = done["is_fraud"].astype(int).tolist()
+    argus_pred = done["argus"].tolist()
+    base_pred = done["baseline"].tolist()
+    faith_scores = done["faith"].astype(float).tolist()
+    pattern_hits = int(done["pattern_hit"].astype(int).sum())
 
     argus_metrics = _prf(y_true, _labels(argus_pred))
     base_metrics = _prf(y_true, _labels(base_pred))

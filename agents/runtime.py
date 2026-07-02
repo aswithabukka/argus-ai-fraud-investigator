@@ -57,8 +57,16 @@ def make_mcp_toolset() -> McpToolset:
 
 
 def _is_transient(err: Exception) -> bool:
-    code = getattr(err, "code", None)
-    return isinstance(err, (ServerError, ClientError)) and code in _TRANSIENT_CODES
+    """True for retryable Gemini errors. ADK sometimes wraps the underlying
+    google.genai error, so we also inspect the string form. A per-DAY quota cap
+    won't reset within our backoff window, so treat it as NOT transient — fail
+    fast rather than burning six long retries on it."""
+    text = str(err)
+    if "PerDay" in text:  # daily free-tier cap — won't clear for hours
+        return False
+    if isinstance(err, (ServerError, ClientError)) and getattr(err, "code", None) in _TRANSIENT_CODES:
+        return True
+    return any(m in text for m in ("RESOURCE_EXHAUSTED", "UNAVAILABLE", "500 INTERNAL"))
 
 
 async def _run_once(agent: LlmAgent, prompt: str, session_id: str) -> tuple[str, list[dict]]:
