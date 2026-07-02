@@ -1,0 +1,19 @@
+[
+  {
+    "id": "drain_to_mule",
+    "description": "TRANSFER that empties the origin balance into a counterparty whose recorded balance stays at zero (pass-through mule).",
+    "match": {
+      "type": "TRANSFER",
+      "balance_drained": true,
+      "counterparty_zero_balance": true
+    }
+  },
+  {
+    "id": "cashout_drain",
+    "description": "CASH_OUT that empties the origin account in a single move.",
+    "match": {
+      "type": "CASH_OUT",
+      "balance_drained": true
+    }
+  }
+]
