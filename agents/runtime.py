@@ -37,6 +37,9 @@ _MAX_ATTEMPTS = 6
 _TRANSIENT_CODES = {429, 500, 503}
 _BACKOFF_CAP = 65
 _RETRY_HINT_RE = re.compile(r"retry in ([0-9.]+)s")
+# Hard ceiling per attempt. Without it, one API/MCP call that never responds
+# hangs the whole pipeline silently (observed in the first full eval run).
+_ATTEMPT_TIMEOUT_S = 240
 
 
 def load_prompt(name: str) -> str:
@@ -103,7 +106,17 @@ async def run_agent(agent: LlmAgent, prompt: str, session_id: str) -> tuple[str,
     last_err: Exception | None = None
     for attempt in range(_MAX_ATTEMPTS):
         try:
-            return await _run_once(agent, prompt, f"{session_id}-a{attempt}")
+            return await asyncio.wait_for(
+                _run_once(agent, prompt, f"{session_id}-a{attempt}"),
+                timeout=_ATTEMPT_TIMEOUT_S,
+            )
+        except TimeoutError as e:
+            if attempt == _MAX_ATTEMPTS - 1:
+                raise
+            print(f"  [retry] {agent.name}: attempt timed out after {_ATTEMPT_TIMEOUT_S}s "
+                  f"(attempt {attempt + 1}/{_MAX_ATTEMPTS})")
+            last_err = e
+            continue
         except Exception as e:  # noqa: BLE001 — inspect then decide
             if not _is_transient(e) or attempt == _MAX_ATTEMPTS - 1:
                 raise
