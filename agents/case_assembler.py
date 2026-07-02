@@ -14,8 +14,10 @@ from guardrails.pii import PIIMasker
 from schemas import (CaseFile, CriticVerdict, EvidenceBundle, PolicyResult,
                      RiskAssessment)
 
-# The model is confident enough to escalate on its own above this score...
-RISK_ESCALATE_THRESHOLD = 0.5
+# The model is confident enough to escalate on its own above this score
+# (the analyzer prompt calibrates: lookalikes 0.1-0.4, ambiguous 0.4-0.7,
+# confident fraud 0.85+ — so 0.7 = the model genuinely believes it)...
+RISK_ESCALATE_THRESHOLD = 0.7
 # ...or a high-severity policy rule can escalate if the model corroborates it
 # at least this much. Requiring corroboration is the score-fusion step: it stops
 # the recall-first policy engine from escalating every legitimate high-value

@@ -1,5 +1,6 @@
 /Users/aswithabukka/Desktop/Kaggle/argus/.venv/lib/python3.13/site-packages/google/adk/features/_feature_decorator.py:72: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
   check_feature_enabled()
+resuming: 56 alerts already evaluated
 /Users/aswithabukka/Desktop/Kaggle/argus/.venv/lib/python3.13/site-packages/google/adk/tools/mcp_tool/mcp_toolset.py:304: UserWarning: [EXPERIMENTAL] feature FeatureName._MCP_GRACEFUL_ERROR_HANDLING is enabled.
   session = await self._mcp_session_manager.create_session(
 Processing request of type ListToolsRequest
@@ -11,283 +12,152 @@ Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[57/80] txn 2566644: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.94
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[58/80] txn 6008476: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.78
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[59/80] txn 604750: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.64
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[60/80] txn 2219740: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.67
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[61/80] txn 1518213: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.93
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[62/80] txn 3610074: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.65
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[63/80] txn 6272944: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.91
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[64/80] txn 298620: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.41
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[65/80] txn 1260538: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.95
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[66/80] txn 3650154: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.88
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[67/80] txn 5908340: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.84
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[68/80] txn 1030581: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.60
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[69/80] txn 576344: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.64
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[70/80] txn 6358608: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.64
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[71/80] txn 5401181: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.58
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[72/80] txn 4493410: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.86
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[73/80] txn 4472587: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.94
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[74/80] txn 6039806: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.85
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[75/80] txn 3360032: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.93
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[76/80] txn 5967458: truth=FRAUD | argus=ESCALATE | baseline=ESCALATE | faith=0.81
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[77/80] txn 2359033: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.87
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[78/80] txn 290260: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.89
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
+[79/80] txn 5675346: truth=FRAUD | argus=ESCALATE | baseline=CLEAR | faith=0.83
 Processing request of type ListToolsRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
 Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type ListToolsRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
-Processing request of type CallToolRequest
+[80/80] txn 2341720: truth=legit | argus=ESCALATE | baseline=ESCALATE | faith=0.79
+
+============================================================
+RESULTS — single-agent baseline vs. full Argus
+============================================================
+               system  precision  recall    f1 faithfulness
+single-agent baseline      0.487    0.95 0.644          n/a
+         Argus (full)      0.500    1.00 0.667        0.803
+
+Cases matching a known fraud pattern (memory): 39/80
+Metrics saved to /Users/aswithabukka/Desktop/Kaggle/argus/results/metrics.csv

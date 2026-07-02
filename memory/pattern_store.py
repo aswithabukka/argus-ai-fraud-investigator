@@ -19,18 +19,20 @@ from typing import Any
 import config
 
 # Seed patterns: the two canonical PaySim fraud shapes, so the store is useful
-# from the first case even before anything is learned at runtime.
+# from the first case even before anything is learned at runtime. Both key on the
+# EXACT-to-the-cent drain — the scripted "send everything" sweep — not fuzzy
+# near-drains, which legitimate large cash-outs also produce.
 _SEED = [
     {
-        "id": "drain_to_mule",
-        "description": "TRANSFER that empties the origin balance into a counterparty "
-                       "whose recorded balance stays at zero (pass-through mule).",
-        "match": {"type": "TRANSFER", "balance_drained": True, "counterparty_zero_balance": True},
+        "id": "exact_drain_to_mule",
+        "description": "TRANSFER that empties the origin balance to the exact cent into "
+                       "a counterparty whose recorded balance stays at zero (pass-through mule).",
+        "match": {"type": "TRANSFER", "exact_drain": True, "counterparty_zero_balance": True},
     },
     {
-        "id": "cashout_drain",
-        "description": "CASH_OUT that empties the origin account in a single move.",
-        "match": {"type": "CASH_OUT", "balance_drained": True},
+        "id": "exact_cashout_drain",
+        "description": "CASH_OUT of the entire origin balance to the exact cent in a single move.",
+        "match": {"type": "CASH_OUT", "exact_drain": True},
     },
 ]
 

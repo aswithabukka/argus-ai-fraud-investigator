@@ -27,21 +27,24 @@ def evaluate(txn: dict, velocity: dict, counterparty: dict) -> PolicyResult:
         detail=f"amount={amount:,.2f} vs threshold {config.LARGE_TRANSFER_THRESHOLD:,}",
     ))
 
-    # 2. Balance draining — origin emptied by this transaction.
-    drained = old_bal > 0 and new_bal <= old_bal * (1 - config.BALANCE_DRAIN_RATIO)
+    # 2. EXACT drain — the transaction empties the account to the cent. This is
+    # the signature of an account-takeover sweep: a fraudster scripts "send
+    # everything", while a legitimate customer cashes out a chosen (usually
+    # round) amount and leaves residue. Fuzzy near-drains are only medium.
+    exact_drain = old_bal > 0 and amount == old_bal
     flags.append(PolicyFlag(
-        rule="balance_drain",
-        triggered=bool(drained),
+        rule="exact_balance_drain",
+        triggered=bool(exact_drain),
         severity="high",
-        detail=f"oldbalanceOrg={old_bal:,.2f} -> newbalanceOrig={new_bal:,.2f}",
+        detail=f"amount={amount:,.2f} == oldbalanceOrg={old_bal:,.2f}: {exact_drain}",
     ))
 
-    # 3. High-risk cash-out / transfer type combined with draining.
+    near_drain = old_bal > 0 and not exact_drain and new_bal <= old_bal * (1 - config.BALANCE_DRAIN_RATIO)
     flags.append(PolicyFlag(
-        rule="high_risk_type_drain",
-        triggered=bool(drained and txn.get("type") in ("TRANSFER", "CASH_OUT")),
-        severity="high",
-        detail=f"type={txn.get('type')}, drained={drained}",
+        rule="near_balance_drain",
+        triggered=bool(near_drain),
+        severity="medium",
+        detail=f"oldbalanceOrg={old_bal:,.2f} -> newbalanceOrig={new_bal:,.2f}",
     ))
 
     # 4. Velocity — burst of outgoing transfers in the window.
@@ -53,14 +56,15 @@ def evaluate(txn: dict, velocity: dict, counterparty: dict) -> PolicyResult:
         detail=f"{vcount} outgoing txns in {velocity.get('window_steps')} steps",
     ))
 
-    # 5. Mule-like counterparty.
+    # 5. Mule-like counterparty. Suspicious on its own but common among busy
+    # accounts too, so medium — it corroborates a drain rather than convicts.
     zbr = counterparty.get("zero_balance_rate", 0)
     senders = counterparty.get("distinct_senders", 0)
     is_merchant = counterparty.get("is_merchant", False)
     flags.append(PolicyFlag(
         rule="mule_counterparty",
         triggered=bool((not is_merchant) and zbr >= 0.5 and senders >= 2),
-        severity="high",
+        severity="medium",
         detail=f"zero_balance_rate={zbr}, distinct_senders={senders}, merchant={is_merchant}",
     ))
 
@@ -69,8 +73,8 @@ def evaluate(txn: dict, velocity: dict, counterparty: dict) -> PolicyResult:
 
     if high_hit:
         disposition, reason = config.ESCALATE, "a high-severity policy rule fired"
-    elif n_hit >= 2:
-        disposition, reason = config.ESCALATE, f"{n_hit} policy rules fired"
+    elif n_hit >= 3:
+        disposition, reason = config.ESCALATE, f"{n_hit} medium policy rules fired"
     else:
         disposition, reason = config.CLEAR, "no high-severity policy rule fired"
 

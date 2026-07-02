@@ -1,19 +1,19 @@
 [
   {
-    "id": "drain_to_mule",
-    "description": "TRANSFER that empties the origin balance into a counterparty whose recorded balance stays at zero (pass-through mule).",
+    "id": "exact_drain_to_mule",
+    "description": "TRANSFER that empties the origin balance to the exact cent into a counterparty whose recorded balance stays at zero (pass-through mule).",
     "match": {
       "type": "TRANSFER",
-      "balance_drained": true,
+      "exact_drain": true,
       "counterparty_zero_balance": true
     }
   },
   {
-    "id": "cashout_drain",
-    "description": "CASH_OUT that empties the origin account in a single move.",
+    "id": "exact_cashout_drain",
+    "description": "CASH_OUT of the entire origin balance to the exact cent in a single move.",
     "match": {
       "type": "CASH_OUT",
-      "balance_drained": true
+      "exact_drain": true
     }
   }
 ]

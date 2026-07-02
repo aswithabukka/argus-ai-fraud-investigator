@@ -1,0 +1,3 @@
+system,precision,recall,f1,faithfulness
+single-agent baseline,0.487,0.95,0.644,n/a
+Argus (full),0.5,1.0,0.667,0.803

@@ -34,10 +34,12 @@ def build_agent() -> tuple[LlmAgent, object]:
 
 def _case_features(txn: dict, counterparty: dict) -> dict:
     """Compact, matchable descriptor of the case for the pattern store."""
-    drained = txn.get("oldbalanceOrg", 0) > 0 and txn.get("newbalanceOrig", 0) == 0
+    old_bal = txn.get("oldbalanceOrg", 0)
+    # Exact-to-the-cent drain: the account-takeover "send everything" signature.
+    exact_drain = old_bal > 0 and txn.get("amount") == old_bal
     return {
         "type": txn.get("type"),
-        "balance_drained": bool(drained),
+        "exact_drain": bool(exact_drain),
         "counterparty_zero_balance": counterparty.get("zero_balance_rate", 0) >= 0.5,
     }
 
