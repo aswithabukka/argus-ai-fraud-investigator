@@ -12,7 +12,9 @@ graph — is deliberate: the orchestration logic lives in plain Python
 
 from __future__ import annotations
 
+import asyncio
 import json
+import re
 import sys
 
 from google.adk.agents import LlmAgent
@@ -20,12 +22,21 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.tools.mcp_tool import McpToolset, StdioConnectionParams
 from google.genai import types
+from google.genai.errors import ClientError, ServerError
 from mcp import StdioServerParameters
 
 import config
 
 _APP = "argus"
 _USER = "analyst"
+
+# Free-tier Gemini occasionally returns transient 503 (high demand) or 429 (rate
+# limit). These are not bugs — retry with backoff before giving up. For 429s the
+# API usually tells us how long to wait ("Please retry in 12.3s"); honor that.
+_MAX_ATTEMPTS = 6
+_TRANSIENT_CODES = {429, 500, 503}
+_BACKOFF_CAP = 65
+_RETRY_HINT_RE = re.compile(r"retry in ([0-9.]+)s")
 
 
 def load_prompt(name: str) -> str:
@@ -45,8 +56,12 @@ def make_mcp_toolset() -> McpToolset:
     )
 
 
-async def run_agent(agent: LlmAgent, prompt: str, session_id: str) -> tuple[str, list[dict]]:
-    """Run `agent` on `prompt`; return (final_text, tool_calls)."""
+def _is_transient(err: Exception) -> bool:
+    code = getattr(err, "code", None)
+    return isinstance(err, (ServerError, ClientError)) and code in _TRANSIENT_CODES
+
+
+async def _run_once(agent: LlmAgent, prompt: str, session_id: str) -> tuple[str, list[dict]]:
     session_service = InMemorySessionService()
     runner = Runner(agent=agent, app_name=_APP, session_service=session_service)
     await session_service.create_session(app_name=_APP, user_id=_USER, session_id=session_id)
@@ -69,6 +84,29 @@ async def run_agent(agent: LlmAgent, prompt: str, session_id: str) -> tuple[str,
                 final_text = text
 
     return final_text, tool_calls
+
+
+async def run_agent(agent: LlmAgent, prompt: str, session_id: str) -> tuple[str, list[dict]]:
+    """Run `agent` on `prompt`; return (final_text, tool_calls).
+
+    Retries transient Gemini errors (429/500/503) with exponential backoff, and
+    re-runs on the same session_id suffixed by the attempt so each retry is clean.
+    """
+    last_err: Exception | None = None
+    for attempt in range(_MAX_ATTEMPTS):
+        try:
+            return await _run_once(agent, prompt, f"{session_id}-a{attempt}")
+        except Exception as e:  # noqa: BLE001 — inspect then decide
+            if not _is_transient(e) or attempt == _MAX_ATTEMPTS - 1:
+                raise
+            last_err = e
+            backoff = min(_BACKOFF_CAP, 5 * (2 ** attempt))  # 5,10,20,40,65,65
+            hint = _RETRY_HINT_RE.search(str(e))
+            wait = min(_BACKOFF_CAP, float(hint.group(1)) + 1) if hint else backoff
+            print(f"  [retry] {agent.name}: transient {getattr(e, 'code', '?')} — "
+                  f"backing off {wait:.0f}s (attempt {attempt + 1}/{_MAX_ATTEMPTS})")
+            await asyncio.sleep(wait)
+    raise last_err  # unreachable, but keeps type-checkers happy
 
 
 def parse_json_output(text: str):

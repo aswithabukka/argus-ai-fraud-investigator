@@ -1,5 +1,6 @@
 """Central configuration for Argus: model names, paths, and triage thresholds."""
 
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,10 +18,12 @@ TRANSACTIONS_PATH = DATA_DIR / "transactions.parquet"
 PATTERN_STORE_PATH = ROOT / "memory" / "patterns.json"
 METRICS_PATH = RESULTS_DIR / "metrics.csv"
 
-# Gemini models. Flash handles the specialist agents; Pro is reserved for the
-# Critic, whose job is to catch the other agents' mistakes.
-WORKHORSE_MODEL = "gemini-2.5-flash"
-CRITIC_MODEL = "gemini-2.5-pro"
+# Gemini models. Gemini 2.5 Pro has a free-tier quota of ZERO, so on a free AI
+# Studio key every agent must use Flash. The Critic is still a separate agent with
+# a distinct verification role — on a paid tier, set CRITIC_MODEL to
+# "gemini-2.5-pro" for stronger fact-checking. Override either via env var.
+WORKHORSE_MODEL = os.getenv("ARGUS_WORKHORSE_MODEL", "gemini-2.5-flash")
+CRITIC_MODEL = os.getenv("ARGUS_CRITIC_MODEL", "gemini-2.5-flash")
 
 # Eval set construction (data/load_data.py)
 EVAL_FRAUD_COUNT = 40
