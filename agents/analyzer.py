@@ -15,17 +15,18 @@ from agents.runtime import load_prompt, parse_json_output, run_agent
 from schemas import EvidenceBundle, RiskAssessment
 
 
-def build_agent() -> LlmAgent:
+def build_agent(model: str | None = None) -> LlmAgent:
     return LlmAgent(
         name="analyzer",
-        model=config.WORKHORSE_MODEL,
+        model=model or config.WORKHORSE_MODEL,
         instruction=load_prompt("analyzer"),
         output_schema=RiskAssessment,
     )
 
 
 async def analyze(bundle: EvidenceBundle, session_id: str,
-                  critic_feedback: str | None = None) -> RiskAssessment:
+                  critic_feedback: str | None = None,
+                  model: str | None = None) -> RiskAssessment:
     prompt = f"EVIDENCE BUNDLE:\n{bundle.model_dump_json(indent=2)}\n"
     if critic_feedback:
         prompt += (
@@ -34,5 +35,5 @@ async def analyze(bundle: EvidenceBundle, session_id: str,
         )
     prompt += "\nReturn your risk assessment as JSON."
 
-    text, _ = await run_agent(build_agent(), prompt, session_id)
+    text, _ = await run_agent(build_agent(model), prompt, session_id)
     return RiskAssessment(**parse_json_output(text))

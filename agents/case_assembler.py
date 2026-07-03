@@ -27,7 +27,9 @@ POLICY_CORROBORATION_THRESHOLD = 0.35
 
 def assemble(bundle: EvidenceBundle, assessment: RiskAssessment,
              policy: PolicyResult, critic: CriticVerdict,
-             masker: PIIMasker, audit_path: str | None = None) -> CaseFile:
+             masker: PIIMasker, audit_path: str | None = None,
+             routing_tier: str | None = None,
+             routing_reason: str | None = None) -> CaseFile:
     model_score = assessment.risk_score
     has_high_policy = any(f.triggered and f.severity == "high" for f in policy.flags)
     policy_says_escalate = policy.suggested_disposition == config.ESCALATE
@@ -59,6 +61,8 @@ def assemble(bundle: EvidenceBundle, assessment: RiskAssessment,
         matched_patterns=bundle.known_patterns,
         status="PENDING_HUMAN_APPROVAL",
         audit_trail_path=audit_path,
+        routing_tier=routing_tier,
+        routing_reason=routing_reason,
     )
     # Unmask account ids in the final, local case file for the human analyst.
     return _unmask_case(case, masker)

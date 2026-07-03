@@ -25,6 +25,10 @@ METRICS_PATH = RESULTS_DIR / "metrics.csv"
 # "gemini-2.5-pro" for stronger fact-checking. Override either via env var.
 WORKHORSE_MODEL = os.getenv("ARGUS_WORKHORSE_MODEL", "gemini-2.5-flash")
 CRITIC_MODEL = os.getenv("ARGUS_CRITIC_MODEL", "gemini-2.5-flash")
+# Tiered routing: ambiguous / disagreeing / high-stakes cases are re-examined by
+# the strong model (see agents/router.py). Needs a billed key — Pro has no free
+# tier; on a free key set this to a flash variant.
+STRONG_MODEL = os.getenv("ARGUS_STRONG_MODEL", "gemini-2.5-pro")
 
 # Eval set construction (data/load_data.py)
 EVAL_FRAUD_COUNT = 40

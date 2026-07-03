@@ -89,3 +89,6 @@ class CaseFile(BaseModel):
     status: str = Field(default="PENDING_HUMAN_APPROVAL")
     approver: Optional[str] = None
     audit_trail_path: Optional[str] = None
+    routing_tier: Optional[str] = Field(
+        default=None, description="standard (cheap model) or elevated (strong model)")
+    routing_reason: Optional[str] = None

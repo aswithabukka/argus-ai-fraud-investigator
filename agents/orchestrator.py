@@ -14,7 +14,7 @@ from __future__ import annotations
 import pandas as pd
 
 import config
-from agents import analyzer, case_assembler, critic, policy, retriever
+from agents import analyzer, case_assembler, critic, policy, retriever, router
 from guardrails.pii import PIIMasker
 from guardrails.validation import enforce_evidence_citations, validate_alert
 from memory.session import SessionMemory
@@ -53,6 +53,8 @@ async def triage_alert(txn_id: int,
     # --- Analyzer: risk assessment (with Critic revision loop) --------------
     txn = data_tools.get_transaction(alert.txn_id)  # unmasked, for policy
     critic_feedback = None
+    tier, tier_reason = "standard", "not yet routed"
+    routed_up = False  # the strong model is engaged at most once per case
     while True:
         assessment = await analyzer.analyze(bundle, sid, critic_feedback=critic_feedback)
         memory.assessment = assessment
@@ -75,8 +77,25 @@ async def triage_alert(txn_id: int,
                   {"disposition": pol.suggested_disposition,
                    "fired": [f.rule for f in pol.flags if f.triggered]})
 
+        # --- Router: cost-aware tiered escalation ----------------------------
+        # High risk is not high uncertainty: clear-cut cases stay on the cheap
+        # model; ambiguous / disagreeing / high-stakes ones get the strong one.
+        if not routed_up:
+            tier, tier_reason = router.decide_tier(assessment, pol, txn["amount"])
+            audit.log("router", f"tier: {tier}", tier_reason)
+            if tier == "elevated":
+                routed_up = True
+                assessment = await analyzer.analyze(bundle, sid,
+                                                    model=config.STRONG_MODEL)
+                memory.assessment = assessment
+                audit.log("analyzer", f"re-assessed by strong model ({config.STRONG_MODEL})",
+                          {"risk_score": assessment.risk_score,
+                           "signals": [s.name for s in assessment.signals]})
+
         # --- Critic: fact-check reasoning against evidence ------------------
-        verdict = await critic.critique(bundle, assessment, pol, sid)
+        critic_model = config.STRONG_MODEL if tier == "elevated" else None
+        verdict = await critic.critique(bundle, assessment, pol, sid,
+                                        model=critic_model)
         memory.critic = verdict
         audit.log("critic", "verdict",
                   {"approved": verdict.approved,
@@ -93,7 +112,8 @@ async def triage_alert(txn_id: int,
     # --- Assemble case + human gate ----------------------------------------
     audit_path = str(audit.save())
     case = case_assembler.assemble(bundle, assessment, memory.policy, memory.critic,
-                                   masker, audit_path=audit_path)
+                                   masker, audit_path=audit_path,
+                                   routing_tier=tier, routing_reason=tier_reason)
     audit.log("case_assembler", "case assembled",
               {"disposition": case.disposition, "confidence": case.confidence,
                "status": case.status})

@@ -241,6 +241,15 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
 
     # ---- 6. how the decision was made ------------------------------------------
     st.markdown("#### ⑥ How the final decision was made")
+    rt = (case or {}).get("routing_tier")
+    if rt:
+        if rt == "elevated":
+            st.info(f"🔀 **Model routing: ELEVATED** — this case was re-examined by the "
+                    f"strong model (`{config.STRONG_MODEL}`). Why: "
+                    f"{(case or {}).get('routing_reason', '')}")
+        else:
+            st.caption(f"🔀 Model routing: standard tier — "
+                       f"{(case or {}).get('routing_reason', '')}")
     st.markdown(
         f"Argus fuses two independent judgments — **escalate if either is confident**:\n"
         f"1. **Model judgment**: the Analyzer's risk score **{risk}** vs. the confidence "
@@ -308,6 +317,8 @@ with tab_dash:
             "| 🔎 Retriever | pulls transaction history & risk stats via **MCP tools** | LLM + tools |\n"
             "| 🧠 Analyzer | weighs the evidence, produces a 0–1 risk score with cited signals | LLM |\n"
             "| 📏 Policy | fixed, auditable fraud rules (thresholds, drain patterns) | code |\n"
+            "| 🔀 Router | sends ambiguous/high-stakes cases to the strong model, keeps "
+            "routine ones on the cheap one (cost-aware) | code |\n"
             "| ⚖️ Critic | fact-checks every claim against the evidence — rejects hallucinations | LLM |\n"
             "| 📁 Case Assembler | fuses model + policy into the final recommendation | code |\n"
             "| 👤 Human gate | nothing freezes/blocks without an analyst's approval | human |"

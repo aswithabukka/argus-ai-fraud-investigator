@@ -15,22 +15,23 @@ from agents.runtime import load_prompt, parse_json_output, run_agent
 from schemas import CriticVerdict, EvidenceBundle, PolicyResult, RiskAssessment
 
 
-def build_agent() -> LlmAgent:
+def build_agent(model: str | None = None) -> LlmAgent:
     return LlmAgent(
         name="critic",
-        model=config.CRITIC_MODEL,
+        model=model or config.CRITIC_MODEL,
         instruction=load_prompt("critic"),
         output_schema=CriticVerdict,
     )
 
 
 async def critique(bundle: EvidenceBundle, assessment: RiskAssessment,
-                   policy: PolicyResult, session_id: str) -> CriticVerdict:
+                   policy: PolicyResult, session_id: str,
+                   model: str | None = None) -> CriticVerdict:
     prompt = (
         f"EVIDENCE BUNDLE:\n{bundle.model_dump_json(indent=2)}\n\n"
         f"ANALYZER RISK ASSESSMENT:\n{assessment.model_dump_json(indent=2)}\n\n"
         f"POLICY RESULT:\n{policy.model_dump_json(indent=2)}\n\n"
         "Fact-check the reasoning against the evidence and return your verdict as JSON."
     )
-    text, _ = await run_agent(build_agent(), prompt, session_id)
+    text, _ = await run_agent(build_agent(model), prompt, session_id)
     return CriticVerdict(**parse_json_output(text))
