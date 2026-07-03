@@ -137,7 +137,7 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
                     "ground truth: **actually legitimate**")
                    + ("  →  Argus got it ✅ right" if ok else "  →  Argus got it ❌ wrong"))
     if case and case.get("summary"):
-        st.markdown(f"> {case['summary']}")
+        st.markdown(f"> {case['summary']}".replace("$", "\\$"))
 
     # ---- 1. the alert ---------------------------------------------------------
     st.markdown("#### ① The alert")
@@ -197,11 +197,13 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
     signals = (case or {}).get("risk_assessment", {}).get("signals")
     if signals:
         for s in signals:
-            st.markdown(f"{SEV_ICON.get(s['severity'], '⚪')} **{s['name']}** "
-                        f"({s['severity']}) — {s['detail']}  \n"
-                        f"&nbsp;&nbsp;&nbsp;↳ *evidence cited:* `{s['evidence_ref']}`")
+            st.markdown((f"{SEV_ICON.get(s['severity'], '⚪')} **{s['name']}** "
+                         f"({s['severity']}) — {s['detail']}  \n"
+                         f"&nbsp;&nbsp;&nbsp;↳ *evidence cited:* `{s['evidence_ref']}`")
+                        .replace("$", "\\$"))
         if case.get("risk_assessment", {}).get("rationale"):
-            st.caption("Analyzer's rationale: " + case["risk_assessment"]["rationale"])
+            st.caption("Analyzer's rationale: "
+                       + case["risk_assessment"]["rationale"].replace("$", "\\$"))
     elif analyzer.get("signals"):
         st.write(", ".join(f"`{s}`" for s in analyzer["signals"]))
         st.caption("(full signal details are saved for newly-run cases)")
@@ -446,6 +448,7 @@ with tab_ask:
             with st.spinner("checking the case record…"):
                 r = client.models.generate_content(model=config.WORKHORSE_MODEL,
                                                    contents=prompt)
-            st.markdown(r.text)
+            # escape $ so Streamlit doesn't render dollar amounts as LaTeX math
+            st.markdown((r.text or "").replace("$", "\\$"))
             st.caption("⚠️ grounded answer — sourced from this case's audit trail and "
                        "evidence only")
