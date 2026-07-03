@@ -92,6 +92,7 @@ def case_context(txn_id: int) -> dict:
     return {
         "txn": txn,
         "baseline": data_tools.get_customer_baseline(txn["nameOrig"]),
+        "history": data_tools.get_customer_history(txn["nameOrig"], n=16),
         "counterparty": data_tools.get_counterparty_risk(txn["nameDest"]),
         "velocity": data_tools.compute_velocity_signals(txn["nameOrig"], as_of_step=txn["step"]),
     }
@@ -100,6 +101,302 @@ def case_context(txn_id: int) -> dict:
 def eval_running() -> bool:
     out = subprocess.run(["pgrep", "-f", "eval.run_eval"], capture_output=True, text=True)
     return bool(out.stdout.strip())
+
+
+# ==================== signature components (design handoff) ==================
+RISK_RED, AMBER, GREEN, BLUE = "#ff5245", "#f4b13c", "#37d68a", "#6ea2ff"
+
+
+def risk_color(r) -> str:
+    try:
+        r = float(r)
+    except (TypeError, ValueError):
+        return AMBER
+    return RISK_RED if r >= 0.7 else AMBER if r >= 0.4 else GREEN
+
+
+def render_baseline_chart(ctx: dict, risk) -> None:
+    """Signature A: the alert amount vs this account's own history — a picture,
+    not a number. History bars + glowing alert bar + dashed 'typical' line."""
+    txn, base = ctx["txn"], ctx["baseline"]
+    alert_amt = float(txn["amount"])
+    hist = [float(t["amount"]) for t in ctx.get("history", {}).get("transactions", [])
+            if t.get("txn_id") != txn.get("txn_id")][:15]
+    typical = base.get("median_amount") or base.get("mean_amount") or 0
+    max_val = max([alert_amt, typical or 0] + hist) or 1
+    color = risk_color(risk)
+
+    bars = "".join(
+        f'<div style="flex:1;min-width:3px;height:{max(3, round(a / max_val * 56))}px;'
+        f'background:rgba(255,255,255,.13);border-radius:2px 2px 0 0"></div>'
+        for a in hist)
+    alert_bar = (f'<div style="flex:1;min-width:6px;height:{max(4, round(alert_amt / max_val * 56))}px;'
+                 f'background:{color};border-radius:2px 2px 0 0;'
+                 f'box-shadow:0 0 12px rgba(255,82,69,.55)"></div>')
+    typ_line = ""
+    if typical:
+        typ_line = (f'<div style="position:absolute;left:0;right:0;'
+                    f'bottom:{round(typical / max_val * 56)}px;'
+                    f'border-top:1px dashed rgba(255,255,255,.26)"></div>')
+
+    if typical and typical > 0:
+        mult = alert_amt / typical
+        mult_txt = f"{mult:,.0f}× typical" if mult >= 2 else f"{mult:,.1f}× typical"
+        note = (f"This transaction is <b>{mult_txt}</b> for this account — "
+                + ("a classic drain-signature spike." if mult >= 5 and risk and float(risk) >= 0.5
+                   else "large, but judged against the full evidence below."))
+    else:
+        mult_txt = "no prior history"
+        note = ("<b>No prior sending history</b> — this is the account's first recorded "
+                "transaction, which is itself a risk factor (fraud accounts are often fresh).")
+
+    st.markdown(
+        f'<div style="background:#101319;border:1px solid rgba(255,255,255,.07);'
+        f'border-radius:14px;padding:16px 18px;margin:4px 0 12px">'
+        f'<div style="display:flex;justify-content:space-between;margin-bottom:10px">'
+        f'<span style="color:#8a929e;font-size:12px">Amount vs this account\'s own history</span>'
+        f'<span style="color:{color};font-weight:600;font-size:13px">{mult_txt}</span></div>'
+        f'<div style="position:relative;height:64px;display:flex;align-items:flex-end;gap:3px">'
+        f'{typ_line}{bars}{alert_bar}</div>'
+        f'<div style="color:#aab2bf;font-size:12px;margin-top:10px">{note} '
+        f'<span style="color:#59616e">(grey bars = prior transactions · dashed line = '
+        f'typical amount · glowing bar = this alert)</span></div></div>',
+        unsafe_allow_html=True)
+
+
+def render_money_flow(ctx: dict) -> None:
+    """Signature B: sender → amount → destination (mule/merchant/internal) →
+    optional cash-out. Makes 'mule account' visible instead of a label."""
+    txn, cp = ctx["txn"], ctx["counterparty"]
+    zbr = cp.get("zero_balance_rate") or 0
+    fan_in = cp.get("distinct_senders") or 0
+    if cp.get("is_merchant"):
+        kind, kcolor, badge = "Merchant", GREEN, "VERIFIED"
+        note = "Established merchant account — normal destination for payments."
+    elif zbr >= 0.5 and fan_in >= 2:
+        kind, kcolor, badge = "Mule-like account", RISK_RED, "PASS-THRU"
+        note = (f"{zbr:.0%} of inflow passes straight through and {fan_in} different "
+                f"senders feed it — textbook mule profile.")
+    else:
+        kind, kcolor, badge = "Customer account", BLUE, "HOLDS BAL"
+        note = (f"Receives from {fan_in} sender(s); balance is retained "
+                f"({zbr:.0%} pass-through) — not mule-like.")
+    dots = "".join(f'<span style="display:inline-block;width:5px;height:5px;'
+                   f'border-radius:50%;background:{kcolor};margin-right:3px"></span>'
+                   for _ in range(min(6, max(1, fan_in))))
+    cashout = ""
+    if txn["type"] == "CASH_OUT":
+        cashout = (
+            f'<div style="display:flex;align-items:center;color:{RISK_RED};font-size:11px;'
+            f'padding:0 8px">cash&nbsp;▶</div>'
+            f'<div style="flex:none;width:170px;background:rgba(255,82,69,.07);'
+            f'border:1px solid {RISK_RED};border-radius:12px;padding:12px 14px">'
+            f'<div style="color:{RISK_RED};font-weight:600;font-size:12px">Cash-out</div>'
+            f'<div style="color:#aab2bf;font-size:11px;margin-top:4px">funds exit the '
+            f'system — unrecoverable once withdrawn</div></div>')
+    st.markdown(
+        f'<div style="background:#101319;border:1px solid rgba(255,255,255,.07);'
+        f'border-radius:14px;padding:16px;overflow-x:auto;margin:4px 0 12px">'
+        f'<div style="display:flex;align-items:stretch;min-width:600px;gap:0">'
+        f'<div style="flex:none;width:150px;background:#0c0e13;border:1px solid '
+        f'rgba(255,255,255,.09);border-radius:12px;padding:12px 14px">'
+        f'<div style="color:#8a929e;font-size:10px;letter-spacing:.8px">SENDER</div>'
+        f'<div style="color:#eef1f6;font-family:monospace;font-size:12px;margin-top:4px">'
+        f'{txn["nameOrig"]}</div>'
+        f'<div style="color:#6b7381;font-size:11px;margin-top:4px">flagged account</div></div>'
+        f'<div style="flex:1;display:flex;flex-direction:column;justify-content:center;'
+        f'padding:0 10px;min-width:120px">'
+        f'<div style="text-align:center;background:#14181f;border-radius:8px;color:#eef1f6;'
+        f'font-family:monospace;font-size:12px;padding:4px 8px;margin-bottom:5px">'
+        f'{money(txn["amount"])}</div>'
+        f'<div style="height:2px;background:linear-gradient(90deg,rgba(255,255,255,.06),'
+        f'{kcolor})"></div>'
+        f'<div style="text-align:right;color:{kcolor};font-size:11px;margin-top:5px">'
+        f'{txn["type"]}&nbsp;▶</div></div>'
+        f'<div style="flex:none;width:184px;background:rgba(255,255,255,.02);'
+        f'border:1px solid {kcolor};border-radius:12px;padding:12px 14px">'
+        f'<div style="display:flex;justify-content:space-between">'
+        f'<span style="color:{kcolor};font-weight:600;font-size:12px">{kind}</span>'
+        f'<span style="color:{kcolor};font-size:9px;border:1px solid {kcolor};'
+        f'border-radius:6px;padding:1px 5px">{badge}</span></div>'
+        f'<div style="color:#eef1f6;font-family:monospace;font-size:12px;margin-top:4px">'
+        f'{txn["nameDest"]}</div>'
+        f'<div style="margin-top:6px">{dots}<span style="color:#8a929e;font-size:11px">'
+        f'&nbsp;×{fan_in} senders in</span></div>'
+        f'<div style="color:#aab2bf;font-size:11px;margin-top:6px">{note}</div></div>'
+        f'{cashout}</div></div>',
+        unsafe_allow_html=True)
+
+
+def render_critic_loop(audit: dict | None, case: dict | None) -> None:
+    """Signature C: the Critic's passes — show the catch, not just the consensus."""
+    revisions = []
+    approved = None
+    if audit:
+        for s in audit["steps"]:
+            if s["action"] in ("critic requested revision",
+                               "rejected uncited signals; requesting revision"):
+                revisions.append(str(s["detail"]))
+            if s["agent"] == "critic" and isinstance(s["detail"], dict):
+                approved = s["detail"]
+    cv = (case or {}).get("critic_verdict") or approved or {}
+
+    def pass_box(n, flagged, body):
+        color, bg, icon = ((AMBER, "rgba(244,177,60,.07)", "⚠") if flagged
+                           else (GREEN, "rgba(55,214,138,.06)", "✓"))
+        title = ("flagged — sent back for revision" if flagged else "approved")
+        return (f'<div style="display:flex;gap:12px;background:{bg};border:1px solid {color};'
+                f'border-radius:12px;padding:12px 14px;margin-bottom:8px">'
+                f'<div style="flex:none;width:24px;height:24px;border:1.5px solid {color};'
+                f'border-radius:7px;color:{color};text-align:center;line-height:22px">{icon}</div>'
+                f'<div><div style="color:{color};font-weight:600;font-size:12.5px">'
+                f'Pass {n} · {title}</div>'
+                f'<div style="color:#aab2bf;font-size:12px;margin-top:3px">{body}</div>'
+                f'</div></div>')
+
+    html = ""
+    n = 1
+    for rev in revisions:
+        html += pass_box(n, True, f"The Critic rejected the draft: <i>{rev[:400]}</i>")
+        n += 1
+    if cv.get("approved"):
+        body = ("Every remaining claim checks out against the evidence bundle — no "
+                "hallucinated figures, no uncited conclusions.")
+        if cv.get("issues"):
+            body += f" Notes: {'; '.join(map(str, cv['issues']))[:200]}"
+        html += pass_box(n, False, body)
+    elif cv:
+        html += pass_box(n, True,
+                         "Final verdict withheld approval: "
+                         + "; ".join(map(str, cv.get("unsupported_claims") or
+                                         cv.get("issues") or ["see audit trail"]))[:300])
+    if not html:
+        st.caption("no critic verdict recorded")
+        return
+    if revisions:
+        st.markdown(f"🔥 **The Critic caught something on this case** — it sent the "
+                    f"analysis back before approving. This is the quality gate doing its job.")
+    st.markdown(html, unsafe_allow_html=True)
+
+
+def render_agreement(risk, pol, case: dict | None) -> None:
+    """Signature D: show whether the LLM and the rules agreed — disagreement is
+    information, not noise."""
+    try:
+        model_flags = float(risk) >= 0.5
+    except (TypeError, ValueError):
+        model_flags = False
+    policy_escalates = pol.suggested_disposition == config.ESCALATE
+    a_color = RISK_RED if model_flags else GREEN
+    p_color = RISK_RED if policy_escalates else GREEN
+    agree = model_flags == policy_escalates
+    pill = (f'<span style="background:rgba(55,214,138,.12);color:{GREEN};border:1px solid '
+            f'{GREEN};border-radius:8px;padding:5px 12px;font-size:12px">✓ Both judges '
+            f'agree</span>' if agree else
+            f'<span style="background:rgba(244,177,60,.1);color:{AMBER};border:1px solid '
+            f'{AMBER};border-radius:8px;padding:5px 12px;font-size:12px">⚠ Judges disagree '
+            f'— resolved by the fusion rule'
+            + (" + strong-model arbitration" if (case or {}).get("routing_tier") == "elevated"
+               else "") + '</span>')
+    st.markdown(
+        f'<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:4px 0 10px">'
+        f'<span style="background:#14181f;border:1px solid {a_color};color:{a_color};'
+        f'border-radius:8px;padding:5px 12px;font-size:12px">Analyzer · LLM — '
+        f'{"FLAGS FRAUD" if model_flags else "READS BENIGN"}</span>'
+        f'<span style="background:#14181f;border:1px solid {p_color};color:{p_color};'
+        f'border-radius:8px;padding:5px 12px;font-size:12px">Policy · RULES — '
+        f'{pol.suggested_disposition}</span>{pill}</div>',
+        unsafe_allow_html=True)
+
+
+# ======================= human gate with real weight ==========================
+def human_decisions(audit: dict | None) -> list[dict]:
+    return [s for s in (audit or {}).get("steps", []) if s.get("agent") == "human_gate"]
+
+
+def append_human_decision(txn_id: int, action: str, rationale: str) -> None:
+    from datetime import datetime
+    f = config.AUDIT_DIR / f"case_{txn_id}.json"
+    a = json.loads(f.read_text())
+    a["steps"].append({
+        "seq": len(a["steps"]) + 1, "agent": "human_gate", "action": action,
+        "detail": {"actor": "analyst@bank", "rationale": rationale,
+                   "ts": datetime.now().isoformat(timespec="seconds")},
+        "tool_calls": [],
+    })
+    f.write_text(json.dumps(a, indent=2, default=str))
+
+
+def undo_human_decision(txn_id: int) -> None:
+    f = config.AUDIT_DIR / f"case_{txn_id}.json"
+    a = json.loads(f.read_text())
+    if a["steps"] and a["steps"][-1].get("agent") == "human_gate":
+        a["steps"].pop()
+        f.write_text(json.dumps(a, indent=2, default=str))
+
+
+def render_gate(txn_id: int, disposition: str, audit: dict | None) -> None:
+    """The approval gate with real weight: confirm step, required rationale,
+    decision written to the persistent audit trail (who/when/why), undo."""
+    decided = human_decisions(audit)
+    if decided:
+        last = decided[-1]
+        d = last["detail"]
+        color = GREEN if "DISMISS" in last["action"] or "CLEAR" in last["action"] else RISK_RED
+        st.markdown(
+            f'<div style="background:#101319;border:1px solid {color};border-radius:12px;'
+            f'padding:14px 16px;margin:4px 0 8px">'
+            f'<div style="color:{color};font-weight:600;font-size:13px">DECISION LOGGED — '
+            f'{last["action"]}</div>'
+            f'<div style="color:#aab2bf;font-size:12.5px;margin-top:6px">'
+            f'“{d.get("rationale", "")}”</div>'
+            f'<div style="color:#6b7381;font-size:11px;margin-top:6px">'
+            f'{d.get("actor")} · {d.get("ts")} · written to the case audit trail</div></div>',
+            unsafe_allow_html=True)
+        if st.button("↩︎ Undo decision", key=f"undo_{txn_id}"):
+            undo_human_decision(txn_id)
+            st.toast("Decision reverted and removed from the audit trail")
+            st.rerun()
+        return
+
+    pending_key = f"gate_pending_{txn_id}"
+    pending = st.session_state.get(pending_key)
+    esc_label = ("▲ Approve escalation" if disposition == config.ESCALATE
+                 else "▲ Override → escalate")
+    clr_label = ("✓ Dismiss alert" if disposition == config.ESCALATE
+                 else "✓ Confirm clear")
+    if not pending:
+        st.markdown("**Argus only recommends — nothing freezes or clears without your "
+                    "explicit sign-off, and every decision is logged with a rationale.**")
+        c1, c2 = st.columns(2)
+        if c1.button(esc_label, key=f"esc_{txn_id}", type="primary",
+                     use_container_width=True):
+            st.session_state[pending_key] = "ESCALATION_APPROVED"
+            st.rerun()
+        if c2.button(clr_label, key=f"clr_{txn_id}", use_container_width=True):
+            st.session_state[pending_key] = "DISMISSED_AS_FALSE_ALARM"
+            st.rerun()
+    else:
+        action_h = ("freezes the account pending investigation"
+                    if pending == "ESCALATION_APPROVED" else
+                    "closes this alert as a false alarm")
+        st.warning(f"**Confirm: {pending.replace('_', ' ').title()}** — this {action_h} "
+                   f"for txn {txn_id}. A rationale is required; it becomes part of the "
+                   f"permanent audit record.")
+        rat = st.text_area("Your rationale (min 8 characters — who reviews this later "
+                           "should understand your reasoning)", key=f"rat_{txn_id}")
+        ok = len((rat or "").strip()) >= 8
+        st.caption(("✅ " if ok else "") + f"{len((rat or '').strip())} / 8 min chars")
+        c1, c2 = st.columns(2)
+        if c1.button("Confirm decision", key=f"conf_{txn_id}", type="primary",
+                     disabled=not ok, use_container_width=True):
+            append_human_decision(txn_id, pending, rat.strip())
+            del st.session_state[pending_key]
+            st.toast(f"{pending.replace('_', ' ').title()} · logged to audit trail")
+            st.rerun()
+        if c2.button("Cancel", key=f"canc_{txn_id}", use_container_width=True):
+            del st.session_state[pending_key]
+            st.rerun()
 
 
 # ============================= the case report ================================
@@ -162,6 +459,7 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
 
     # ---- 2. the evidence ------------------------------------------------------
     st.markdown("#### ② Evidence the Retriever gathered *(via MCP data tools)*")
+    render_baseline_chart(ctx, risk)
     e1, e2, e3 = st.columns(3)
     with e1:
         st.markdown("**Sender's normal behavior**")
@@ -192,8 +490,12 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
         if vel.get("total_amount") is not None:
             st.write(f"- total moved in window: **{money(vel['total_amount'])}**")
 
-    # ---- 3. analyzer signals --------------------------------------------------
-    st.markdown("#### ③ Risk signals the Analyzer found *(LLM reasoning over the evidence)*")
+    # ---- 3. money flow ----------------------------------------------------------
+    st.markdown("#### ③ Where the money went")
+    render_money_flow(ctx)
+
+    # ---- 4. analyzer signals --------------------------------------------------
+    st.markdown("#### ④ Risk signals the Analyzer found *(LLM reasoning over the evidence)*")
     signals = (case or {}).get("risk_assessment", {}).get("signals")
     if signals:
         for s in signals:
@@ -210,8 +512,8 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
     else:
         st.caption("no signals recorded")
 
-    # ---- 4. policy rules ------------------------------------------------------
-    st.markdown("#### ④ Policy rules *(deterministic code — same input, same answer, "
+    # ---- 5. policy rules ------------------------------------------------------
+    st.markdown("#### ⑤ Policy rules *(deterministic code — same input, same answer, "
                 "auditable by a regulator)*")
     from agents import policy as policy_engine
     pol = policy_engine.evaluate(txn, vel, cp)
@@ -222,25 +524,14 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
     st.caption(f"Policy engine verdict: **{pol.suggested_disposition}** — {pol.reason}")
 
-    # ---- 5. critic ------------------------------------------------------------
-    st.markdown("#### ⑤ The Critic's fact-check *(a second model verifies every claim "
+    # ---- 6. critic ------------------------------------------------------------
+    st.markdown("#### ⑥ The Critic's fact-check *(a second model verifies every claim "
                 "against the evidence before anything is finalized)*")
-    cv = (case or {}).get("critic_verdict") or critic
-    if cv:
-        if cv.get("approved"):
-            st.success("✅ Approved — every claim in the risk assessment is supported by "
-                       "the gathered evidence. No hallucinated numbers found.")
-        else:
-            st.warning("✋ The Critic pushed back and requested a revision.")
-        if cv.get("unsupported_claims"):
-            st.write("Unsupported claims flagged:", cv["unsupported_claims"])
-        if cv.get("issues"):
-            st.write("Issues raised:", cv["issues"])
-    else:
-        st.caption("no critic verdict recorded")
+    render_critic_loop(audit, case)
 
-    # ---- 6. how the decision was made ------------------------------------------
-    st.markdown("#### ⑥ How the final decision was made")
+    # ---- 7. how the decision was made ------------------------------------------
+    st.markdown("#### ⑦ How the final decision was made")
+    render_agreement(risk, pol, case)
     rt = (case or {}).get("routing_tier")
     if rt:
         if rt == "elevated":
@@ -261,12 +552,20 @@ def render_case_report(txn_id: int, audit: dict | None, truth: int | None) -> No
         f"happens unless a human approves it.**"
     )
 
-    # ---- raw trail for auditors -------------------------------------------------
+    # ---- 8. your decision (the human gate) --------------------------------------
+    st.markdown("#### ⑧ Your decision")
+    render_gate(txn_id, disp, audit)
+
+    # ---- 9. audit trail -----------------------------------------------------------
     if audit:
-        with st.expander("🗃 Raw audit trail — every step in order (for auditors)"):
+        st.markdown("#### ⑨ Audit trail")
+        st.caption("Every step of this investigation, in order — including your decision. "
+                   "This is the record a regulator or dispute reviewer would read.")
+        with st.expander("Open the full trail"):
             icons = {"orchestrator": "🎯", "retriever": "🔎", "analyzer": "🧠",
                      "policy": "📏", "critic": "⚖️", "case_assembler": "📁",
-                     "memory": "💾", "guardrail": "🛡️"}
+                     "memory": "💾", "guardrail": "🛡️", "router": "🔀",
+                     "human_gate": "👤"}
             for s in audit["steps"]:
                 st.markdown(f"**{s['seq']:02d}. {icons.get(s['agent'], '•')} "
                             f"{s['agent']}** — {s['action']}")
@@ -412,14 +711,6 @@ with tab_triage:
         truth_map.update({int(r.txn_id): int(r.isFraud) for _, r in ev.iterrows()})
         st.divider()
         render_case_report(t, audits.get(t), truth_map.get(t))
-        st.divider()
-        st.markdown("### 👤 Human approval gate — Argus only recommends. **You decide:**")
-        c1, c2 = st.columns(2)
-        if c1.button("✅ Approve escalation", use_container_width=True):
-            st.success("Case **APPROVED_FOR_ACTION** — in production this would *authorize* "
-                       "(never auto-execute) an account freeze. Simulated here.")
-        if c2.button("❌ Dismiss as false alarm", use_container_width=True):
-            st.info("Case **DISMISSED_BY_HUMAN** — recorded in the audit trail.")
 
 
 # ============================= 4. ask argus ===================================

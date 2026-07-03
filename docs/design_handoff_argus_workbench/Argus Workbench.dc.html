@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;background:#08090c;color:#eef1f6;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.11);border-radius:6px;border:2px solid transparent;background-clip:padding-box}
+  ::-webkit-scrollbar-track{background:transparent}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(255,82,69,.22)}50%{box-shadow:0 0 0 8px rgba(255,82,69,.03)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+  @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @keyframes growBar{from{transform:scaleY(.15)}to{transform:scaleY(1)}}
+  .argx input::placeholder,.argx textarea::placeholder{color:#59616e}
+</style>
+</helmet>
+
+<div class="argx" style="display:flex;min-height:100vh;background:#08090c">
+
+  <!-- ===================== NAV RAIL ===================== -->
+  <aside style="width:230px;flex:none;background:#0b0d11;border-right:1px solid rgba(255,255,255,.06);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:20px 16px">
+    <div style="display:flex;align-items:center;gap:11px;padding:2px 6px 20px">
+      <span style="width:32px;height:32px;flex:none;border-radius:9px;background:#ff5245;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(255,82,69,.4)">
+        <span style="width:14px;height:15px;background:#fff;display:block;clip-path:polygon(50% 0,100% 22%,100% 58%,50% 100%,0 58%,0 22%)"></span>
+      </span>
+      <div>
+        <div style="font:700 17px 'IBM Plex Sans';letter-spacing:.4px;line-height:1">ARGUS</div>
+        <div style="font:500 9.5px 'IBM Plex Mono';letter-spacing:1px;color:#59616e;margin-top:3px">FRAUD OPS</div>
+      </div>
+    </div>
+
+    <nav style="display:flex;flex-direction:column;gap:3px">
+      <button onClick="{{ navOverview }}" style="{{ navStyle.overview }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        Overview
+      </button>
+      <button onClick="{{ navCases }}" style="{{ navStyle.cases }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="13" y2="16"/></svg>
+        Case files
+      </button>
+      <button onClick="{{ navLive }}" style="{{ navStyle.live }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>
+        Live triage
+      </button>
+      <button onClick="{{ navAsk }}" style="{{ navStyle.ask }}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-4 4V5z"/></svg>
+        Ask Argus
+      </button>
+    </nav>
+
+    <div style="height:1px;background:rgba(255,255,255,.06);margin:18px 6px"></div>
+
+    <div style="padding:0 6px">
+      <div style="font:600 9.5px 'IBM Plex Mono';letter-spacing:1.1px;color:#59616e">SYSTEM</div>
+      <div style="display:flex;align-items:center;gap:9px;margin-top:10px">
+        <span style="{{ evalDotStyle }}"></span>
+        <span style="font:600 14px 'IBM Plex Sans';color:{{ evalColor }}">{{ evalLabel }}</span>
+        <span style="font:500 10px 'IBM Plex Mono';color:#59616e;margin-left:auto">pipeline</span>
+      </div>
+      <div style="font:600 9.5px 'IBM Plex Mono';letter-spacing:1.1px;color:#59616e;margin-top:18px">BENCHMARK · 51/80</div>
+      <div style="height:5px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:8px;overflow:hidden">
+        <div style="height:100%;width:64%;background:#ff5245;border-radius:4px"></div>
+      </div>
+      <div style="margin-top:16px;font:400 10.5px/1.7 'IBM Plex Mono';color:#59616e">
+        80 cases on disk<br>
+        model · <span style="color:#aab2bf">claude-sonnet-5</span><br>
+        critic · <span style="color:#aab2bf">claude-opus-4</span>
+      </div>
+    </div>
+
+    <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;background:#101319;border:1px solid rgba(255,255,255,.06);border-radius:11px">
+      <span style="width:30px;height:30px;flex:none;border-radius:50%;background:#1d3352;color:#8fc0ff;display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono'">AR</span>
+      <div style="min-width:0">
+        <div style="font:600 12.5px 'IBM Plex Sans';overflow:hidden;text-overflow:ellipsis;white-space:nowrap">A. Reyes</div>
+        <div style="font:500 10px 'IBM Plex Mono';color:#59616e">Senior analyst</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <!-- ============ OVERVIEW ============ -->
+    <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:0 0 60px">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 34px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div>
+          <div style="font:700 19px 'IBM Plex Sans';letter-spacing:-.2px">Overview</div>
+          <div style="font:400 12.5px 'IBM Plex Mono';color:#6b7381;margin-top:2px">multi-agent fraud triage · analyst console</div>
+        </div>
+        <button onClick="{{ navLive }}" style="display:inline-flex;align-items:center;gap:8px;background:#ff5245;color:#fff;border:none;font:600 13px 'IBM Plex Sans';padding:11px 18px;border-radius:10px;cursor:pointer;box-shadow:0 5px 16px rgba(255,82,69,.28)"><span style="font-family:'IBM Plex Mono'">▶</span> Run live triage</button>
+      </header>
+
+      <div style="max-width:1120px;padding:28px 34px;animation:fadeUp .3s ease">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)">
+            <div style="font:500 12px 'IBM Plex Sans';color:#8a929e">Frauds caught</div>
+            <div style="font:600 32px 'IBM Plex Sans';letter-spacing:-.5px;margin-top:6px">25<span style="color:#4c5462;font-size:20px">/26</span></div>
+            <div style="font:500 11px 'IBM Plex Mono';color:#37d68a;margin-top:3px">96% recall</div>
+          </div>
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)">
+            <div style="font:500 12px 'IBM Plex Sans';color:#8a929e">Faithfulness</div>
+            <div style="font:600 32px 'IBM Plex Sans';letter-spacing:-.5px;margin-top:6px">0.88</div>
+            <div style="font:500 11px 'IBM Plex Mono';color:#37d68a;margin-top:3px">critic-verified</div>
+          </div>
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)">
+            <div style="font:500 12px 'IBM Plex Sans';color:#8a929e">H2H vs baseline</div>
+            <div style="font:600 32px 'IBM Plex Sans';letter-spacing:-.5px;margin-top:6px">5<span style="color:#4c5462;font-size:20px">/6</span></div>
+            <div style="font:500 11px 'IBM Plex Mono';color:#8a929e;margin-top:3px">disagreements won</div>
+          </div>
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)">
+            <div style="font:500 12px 'IBM Plex Sans';color:#8a929e">Queue depth</div>
+            <div style="font:600 32px 'IBM Plex Sans';letter-spacing:-.5px;margin-top:6px">12</div>
+            <div style="font:500 11px 'IBM Plex Mono';color:#f4b13c;margin-top:3px">awaiting triage</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-top:16px">
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:22px 24px">
+            <h2 style="margin:0;font:700 20px 'IBM Plex Sans';letter-spacing:-.3px">What Argus does</h2>
+            <p style="margin:12px 0 0;font:400 14px/1.7 'IBM Plex Sans';color:#aab2bf">Banks generate thousands of fraud alerts — most are false alarms, but every one needs a human. Argus <b style="color:#eef1f6">runs the whole investigation automatically</b>, fact-checks its own reasoning with a second model, and hands you a finished case file. <b style="color:#eef1f6">You make the final call.</b></p>
+            <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:7px">
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#6b7381">Alert</span><span style="color:#3a414c">›</span>
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#aab2bf">Orchestrator</span><span style="color:#3a414c">›</span>
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#aab2bf">Retriever</span><span style="color:#3a414c">›</span>
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#aab2bf">Analyzer</span><span style="color:#3a414c">›</span>
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#aab2bf">Policy</span><span style="color:#3a414c">›</span>
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#aab2bf">Critic</span><span style="color:#3a414c">›</span>
+              <span style="font:500 11.5px 'IBM Plex Mono';color:#ff8078">Human gate</span>
+            </div>
+          </div>
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:#14181f;border-bottom:1px solid rgba(255,255,255,.07)">
+              <div style="padding:11px 18px;font:600 10px 'IBM Plex Mono';letter-spacing:.7px;color:#6b7381">SYSTEM</div>
+              <div style="padding:11px 12px;font:600 10px 'IBM Plex Mono';letter-spacing:.7px;color:#6b7381;text-align:right">P</div>
+              <div style="padding:11px 12px;font:600 10px 'IBM Plex Mono';letter-spacing:.7px;color:#6b7381;text-align:right">R</div>
+              <div style="padding:11px 18px;font:600 10px 'IBM Plex Mono';letter-spacing:.7px;color:#6b7381;text-align:right">F1</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid rgba(255,255,255,.05)">
+              <div style="padding:14px 18px;font:500 13px 'IBM Plex Sans';color:#aab2bf">baseline (1 prompt)</div>
+              <div style="padding:14px 12px;font:500 13px 'IBM Plex Mono';color:#8a929e;text-align:right">.48</div>
+              <div style="padding:14px 12px;font:500 13px 'IBM Plex Mono';color:#8a929e;text-align:right">.88</div>
+              <div style="padding:14px 18px;font:500 13px 'IBM Plex Mono';color:#8a929e;text-align:right">.62</div>
+            </div>
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:rgba(55,214,138,.05)">
+              <div style="padding:14px 18px;font:600 13px 'IBM Plex Sans';display:flex;align-items:center;gap:8px"><span style="width:6px;height:6px;border-radius:50%;background:#37d68a"></span>Argus (full)</div>
+              <div style="padding:14px 12px;font:600 13px 'IBM Plex Mono';color:#37d68a;text-align:right">.52</div>
+              <div style="padding:14px 12px;font:600 13px 'IBM Plex Mono';color:#37d68a;text-align:right">.96</div>
+              <div style="padding:14px 18px;font:600 13px 'IBM Plex Mono';color:#37d68a;text-align:right">.68</div>
+            </div>
+            <div style="padding:12px 18px;font:400 11px 'IBM Plex Mono';color:#6b7381">replayed on 51 labelled alerts</div>
+          </div>
+        </div>
+
+        <div style="font:600 10.5px 'IBM Plex Mono';letter-spacing:1.1px;color:#6b7381;margin:30px 0 12px">THE AGENTS</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <sc-for list="{{ agents }}" as="a" hint-placeholder-count="6">
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:16px 17px">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="width:8px;height:8px;border-radius:2px;background:{{ a.color }}"></span>
+                <span style="font:600 13.5px 'IBM Plex Sans'">{{ a.name }}</span>
+              </div>
+              <p style="margin:9px 0 0;font:400 12.5px/1.55 'IBM Plex Sans';color:#8a929e">{{ a.desc }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ============ CASE FILES — TWO PANE ============ -->
+    <sc-if value="{{ isCases }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;height:100vh">
+      <!-- queue column -->
+      <div style="width:340px;flex:none;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;background:#0a0c10">
+        <div style="padding:18px 20px 12px">
+          <div style="font:700 16px 'IBM Plex Sans'">Investigated cases</div>
+          <div style="font:400 11.5px 'IBM Plex Mono';color:#6b7381;margin-top:2px">80 on disk · 6 shown</div>
+          <div style="display:flex;gap:6px;margin-top:14px">
+            <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+              <button onClick="{{ f.onClick }}" style="{{ f.style }}">{{ f.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:4px 12px 20px">
+          <sc-for list="{{ caseRows }}" as="r" hint-placeholder-count="6">
+            <button onClick="{{ r.onSelect }}" style="{{ r.style }}">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="font:600 13px 'IBM Plex Mono';color:#eef1f6">txn {{ r.id }}</span>
+                <span style="font:600 10px 'IBM Plex Mono';letter-spacing:.4px;padding:2px 7px;border-radius:5px;{{ r.recBadge }}">{{ r.rec }}</span>
+                <span style="margin-left:auto;font:600 13px 'IBM Plex Mono';color:{{ r.riskColor }}">{{ r.riskPct }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:8px;font:500 12px 'IBM Plex Sans';color:#8a929e">
+                <span>{{ r.type }}</span><span style="color:#3a414c">·</span><span style="color:#c7cdd8;font-family:'IBM Plex Mono'">{{ r.amount }}</span>
+              </div>
+              <div style="height:4px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:10px;overflow:hidden">
+                <div style="{{ r.meterStyle }}"></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;margin-top:9px">
+                <span style="font:500 10px 'IBM Plex Mono';color:#6b7381">truth: {{ r.truth }}</span>
+                <span style="margin-left:auto;font:600 10px 'IBM Plex Mono';{{ r.statusStyle }}">{{ r.statusText }}</span>
+              </div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- detail pane -->
+      <div style="flex:1;min-width:0;overflow-y:auto">
+        <div style="padding:26px 34px 70px;max-width:940px;animation:fadeUp .25s ease">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font:700 24px 'IBM Plex Sans';letter-spacing:-.3px">Case {{ sel.id }}</span>
+                <span style="font:600 11px 'IBM Plex Mono';letter-spacing:.5px;padding:4px 10px;border-radius:6px;{{ sel.recBadge }}">{{ sel.rec }}</span>
+              </div>
+              <div style="font:400 13px 'IBM Plex Sans';color:#8a929e;margin-top:7px">Ground truth · <b style="color:{{ sel.truthColor }}">{{ sel.truthText }}</b> — Argus was <b style="color:#6fe0ac">correct</b> · status <span style="font-family:'IBM Plex Mono';color:#aab2bf">PENDING_APPROVAL</span></div>
+            </div>
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:14px 18px;min-width:210px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between">
+                <span style="font:500 11px 'IBM Plex Mono';color:#6b7381">MODEL RISK</span>
+                <span style="font:600 11px 'IBM Plex Mono';color:{{ sel.riskColor }}">{{ sel.riskBand }}</span>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+                <span style="font:600 30px 'IBM Plex Sans';letter-spacing:-.5px;color:{{ sel.riskColor }}">{{ sel.riskFmt }}</span>
+                <span style="font:500 11px 'IBM Plex Mono';color:#6b7381">conf {{ sel.confFmt }}</span>
+              </div>
+              <div style="height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden"><div style="{{ sel.meterStyle }}"></div></div>
+            </div>
+          </div>
+
+          <!-- agent trace -->
+          <div style="display:flex;align-items:center;margin:24px 0 8px;padding:14px 18px;background:#0c0e13;border:1px solid rgba(255,255,255,.06);border-radius:13px;overflow-x:auto">
+            <sc-for list="{{ sel.trace }}" as="t" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;flex:none">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:5px;min-width:78px">
+                  <span style="width:10px;height:10px;border-radius:50%;background:#37d68a;box-shadow:0 0 0 3px rgba(55,214,138,.15)"></span>
+                  <span style="font:600 11px 'IBM Plex Sans';color:#eef1f6">{{ t.label }}</span>
+                  <span style="font:500 9.5px 'IBM Plex Mono';color:#6b7381">{{ t.cap }}</span>
+                </div>
+                <span style="{{ t.connStyle }}"></span>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- 01 alert -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">01</span><span style="{{ secTitle }}">The alert</span></div>
+          <p style="margin:0 0 14px;font:400 13.5px/1.6 'IBM Plex Sans';color:#aab2bf">{{ sel.alertLine }}</p>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px">
+            <sc-for list="{{ sel.alertCards }}" as="k" hint-placeholder-count="4">
+              <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 15px">
+                <div style="font:500 11px 'IBM Plex Sans';color:#8a929e">{{ k.label }}</div>
+                <div style="font:600 19px 'IBM Plex Mono';margin-top:5px">{{ k.value }}</div>
+                <div style="font:500 10.5px 'IBM Plex Mono';margin-top:4px;color:{{ k.subColor }}">{{ k.sub }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- 02 evidence -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">02</span><span style="{{ secTitle }}">Evidence gathered</span><span style="{{ secSub }}">Retriever · data tools</span></div>
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 18px;margin-bottom:11px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between">
+              <span style="font:600 12.5px 'IBM Plex Sans'">Amount vs this account's own history</span>
+              <span style="font:600 14px 'IBM Plex Mono';color:{{ sel.riskColor }}">{{ sel.multFmt }} typical</span>
+            </div>
+            <div style="position:relative;height:64px;display:flex;align-items:flex-end;gap:3px;margin-top:16px">
+              <sc-for list="{{ sel.histBars }}" as="b" hint-placeholder-count="15"><span style="{{ b.style }}"></span></sc-for>
+              <span style="{{ sel.alertBarStyle }}"></span>
+              <span style="{{ sel.typLineStyle }}"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font:400 10px 'IBM Plex Mono';color:#6b7381;margin-top:8px"><span>15 prior transactions · - - typical</span><span style="color:{{ sel.riskColor }}">▮ this alert</span></div>
+            <div style="font:400 12px/1.55 'IBM Plex Sans';color:#aab2bf;margin-top:9px">{{ sel.baselineNote }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px">
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:15px 16px">
+              <div style="font:600 12px 'IBM Plex Sans';margin-bottom:10px">Sender baseline</div>
+              <sc-for list="{{ sel.sender }}" as="r" hint-placeholder-count="4"><div style="{{ evRow }}"><span>{{ r.k }}</span><span style="{{ evVal }}">{{ r.v }}</span></div></sc-for>
+            </div>
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:15px 16px">
+              <div style="font:600 12px 'IBM Plex Sans';margin-bottom:10px">Counterparty</div>
+              <sc-for list="{{ sel.counter }}" as="r" hint-placeholder-count="4"><div style="{{ evRow }}"><span>{{ r.k }}</span><span style="{{ evVal }}">{{ r.v }}</span></div></sc-for>
+            </div>
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:15px 16px">
+              <div style="font:600 12px 'IBM Plex Sans';margin-bottom:10px">Velocity</div>
+              <sc-for list="{{ sel.velocity }}" as="r" hint-placeholder-count="4"><div style="{{ evRow }}"><span>{{ r.k }}</span><span style="{{ evVal }}">{{ r.v }}</span></div></sc-for>
+            </div>
+          </div>
+
+          <!-- 03 money flow -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">03</span><span style="{{ secTitle }}">Money flow</span><span style="{{ secSub }}">where the money goes</span></div>
+          <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:22px 20px;overflow-x:auto">
+            <div style="display:flex;align-items:center;min-width:600px">
+              <div style="flex:none;width:150px;background:#0c0e13;border:1px solid rgba(255,255,255,.09);border-radius:11px;padding:13px 14px">
+                <div style="font:600 12.5px 'IBM Plex Sans'">Sender</div>
+                <div style="font:600 12px 'IBM Plex Mono';color:#aab2bf;margin-top:5px">{{ sel.flow.sender }}</div>
+                <div style="font:400 10px 'IBM Plex Mono';color:#6b7381;margin-top:4px">flagged account</div>
+              </div>
+              <div style="flex:1;min-width:70px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 6px">
+                <span style="font:600 11px 'IBM Plex Mono';color:#eef1f6;background:#14181f;border:1px solid rgba(255,255,255,.1);padding:3px 10px;border-radius:20px">{{ sel.flow.amount }}</span>
+                <div style="width:100%;height:2px;background:linear-gradient(90deg,rgba(255,255,255,.06),{{ sel.flow.destColor }})"></div>
+                <span style="font:600 10px 'IBM Plex Mono';color:{{ sel.flow.destColor }}">{{ sel.flow.typeLabel }} ▶</span>
+              </div>
+              <div style="flex:none;width:184px;background:{{ sel.flow.destBg }};border:1px solid {{ sel.flow.destBorder }};border-radius:11px;padding:13px 14px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                  <span style="font:600 12.5px 'IBM Plex Sans';color:{{ sel.flow.destColor }}">{{ sel.flow.destLabel }}</span>
+                  <span style="font:600 8px 'IBM Plex Mono';letter-spacing:.4px;padding:2px 6px;border-radius:5px;background:{{ sel.flow.destColor }};color:#08090c">{{ sel.flow.destBadge }}</span>
+                </div>
+                <div style="font:600 12px 'IBM Plex Mono';color:#aab2bf;margin-top:6px">{{ sel.flow.dest }}</div>
+                <div style="display:flex;align-items:center;gap:4px;margin-top:9px">
+                  <sc-for list="{{ sel.flow.fanDots }}" as="d" hint-placeholder-count="6"><span style="width:5px;height:5px;border-radius:50%;background:{{ d.c }}"></span></sc-for>
+                  <span style="font:600 10px 'IBM Plex Mono';color:{{ sel.flow.destColor }};margin-left:3px">{{ sel.flow.fanLabel }}</span>
+                </div>
+                <div style="font:400 10px/1.4 'IBM Plex Mono';color:#6b7381;margin-top:7px">{{ sel.flow.fanNote }}</div>
+              </div>
+              <sc-if value="{{ sel.flow.isCashOut }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1;min-width:56px;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0 6px">
+                  <div style="width:100%;height:2px;background:linear-gradient(90deg,{{ sel.flow.destColor }},#ff5245)"></div>
+                  <span style="font:600 10px 'IBM Plex Mono';color:#ff8078">cash ▶</span>
+                </div>
+                <div style="flex:none;width:128px;background:rgba(255,82,69,.08);border:1px solid rgba(255,82,69,.28);border-radius:11px;padding:13px 14px">
+                  <div style="font:600 12.5px 'IBM Plex Sans';color:#ff8078">Cash-out</div>
+                  <div style="font:400 10px/1.4 'IBM Plex Mono';color:#6b7381;margin-top:5px">funds exit the system — unrecoverable</div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+
+          <!-- 04 signals -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">04</span><span style="{{ secTitle }}">Risk signals</span><span style="{{ secSub }}">Analyzer · LLM reasoning</span></div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <sc-for list="{{ sel.signals }}" as="s" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:8px;font:500 12.5px 'IBM Plex Mono';padding:8px 13px;border-radius:8px;{{ s.style }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ s.dot }}"></span>{{ s.label }}</span></sc-for>
+          </div>
+
+          <!-- 05 policy -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">05</span><span style="{{ secTitle }}">Policy rules</span><span style="{{ secSub }}">deterministic · auditable</span></div>
+          <div style="border:1px solid rgba(255,255,255,.07);border-radius:13px;overflow:hidden;background:#101319">
+            <div style="display:grid;grid-template-columns:1.2fr .7fr 2.3fr 2fr;background:#14181f;border-bottom:1px solid rgba(255,255,255,.07)">
+              <div style="{{ thc }}">RULE</div><div style="{{ thc }}">FIRED</div><div style="{{ thc }}">CHECK</div><div style="{{ thc }}">VALUES</div>
+            </div>
+            <sc-for list="{{ sel.policyRows }}" as="p" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:1.2fr .7fr 2.3fr 2fr;border-top:1px solid rgba(255,255,255,.05)">
+                <div style="padding:11px 14px;font:500 12px 'IBM Plex Mono';color:#eef1f6">{{ p.rule }}</div>
+                <div style="padding:11px 14px;font:600 11px 'IBM Plex Mono';color:{{ p.firedColor }}">{{ p.firedText }}</div>
+                <div style="padding:11px 14px;font:400 11.5px/1.4 'IBM Plex Sans';color:#8a929e">{{ p.checks }}</div>
+                <div style="padding:11px 14px;font:400 11px/1.4 'IBM Plex Mono';color:#aab2bf">{{ p.values }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:9px;font:500 12.5px 'IBM Plex Sans';color:#8a929e">Verdict · <b style="color:{{ sel.policyVerdictColor }}">{{ sel.policyVerdict }}</b> — {{ sel.policyNote }}</div>
+
+          <!-- 06 critic loop -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">06</span><span style="{{ secTitle }}">Critic fact-check</span><span style="{{ secSub }}">second model · verify → revise loop</span></div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ sel.criticPasses }}" as="p" hint-placeholder-count="1">
+              <div style="display:flex;gap:13px;align-items:flex-start;border-radius:12px;padding:14px 16px;{{ p.bg }}">
+                <span style="width:24px;height:24px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 13px 'IBM Plex Mono';color:{{ p.badgeColor }};border:1px solid {{ p.badgeColor }}">{{ p.badge }}</span>
+                <div>
+                  <div style="font:600 12.5px 'IBM Plex Sans';color:#eef1f6">Pass {{ p.n }} · {{ p.statusText }}</div>
+                  <div style="font:400 12.5px/1.55 'IBM Plex Sans';color:#aab2bf;margin-top:4px">{{ p.text }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- 07 decision -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">07</span><span style="{{ secTitle }}">Decision fusion</span></div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:11px">
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 15px">
+              <div style="font:500 9.5px 'IBM Plex Mono';letter-spacing:.5px;color:#6b7381">ANALYZER · LLM</div>
+              <div style="font:600 13px 'IBM Plex Sans';color:{{ sel.analyzerColor }};margin-top:4px">{{ sel.analyzerLean }}</div>
+            </div>
+            <div style="background:#101319;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 15px">
+              <div style="font:500 9.5px 'IBM Plex Mono';letter-spacing:.5px;color:#6b7381">POLICY · RULES</div>
+              <div style="font:600 13px 'IBM Plex Sans';color:{{ sel.policyVerdictColor }};margin-top:4px">{{ sel.policyVerdict }}</div>
+            </div>
+            <div style="flex:1;min-width:200px;display:flex;align-items:center;gap:9px;border-radius:10px;padding:10px 15px;background:{{ sel.agreeBg }};border:1px solid {{ sel.agreeBorder }}">
+              <span style="font:600 15px 'IBM Plex Mono';color:{{ sel.agreeColor }}">{{ sel.agreeIcon }}</span>
+              <span style="font:600 12.5px 'IBM Plex Sans';color:{{ sel.agreeColor }}">{{ sel.agreeText }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ sel.reasoning }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;gap:14px;background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 16px">
+                <span style="font:600 12px 'IBM Plex Mono';color:#6ea2ff;min-width:118px">{{ r.k }}</span>
+                <span style="font:400 12.5px/1.5 'IBM Plex Sans';color:#aab2bf">{{ r.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- 08 your decision -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">08</span><span style="{{ secTitle }}">Your decision</span></div>
+          <div style="border:1px solid rgba(255,82,69,.25);background:linear-gradient(180deg,rgba(255,82,69,.06),rgba(255,82,69,.015));border-radius:14px;padding:20px 22px">
+            <div style="font:600 10px 'IBM Plex Mono';letter-spacing:1px;color:#ff8078">HUMAN APPROVAL GATE</div>
+            <div style="font:400 12.5px/1.6 'IBM Plex Sans';color:#aab2bf;margin:8px 0 16px">Argus recommends <b style="color:{{ sel.recColor }}">{{ sel.rec }}</b>. Nothing is frozen or cleared until you confirm — and your rationale is written to the audit trail below.</div>
+            <sc-if value="{{ sel.decided }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;gap:13px;align-items:flex-start;padding:15px 16px;border-radius:12px;{{ sel.decisionBg }}">
+                <span style="font:600 16px 'IBM Plex Mono';color:{{ sel.decisionColor }}">{{ sel.decisionIcon }}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font:600 13.5px 'IBM Plex Sans';color:{{ sel.decisionColor }}">{{ sel.decisionText }}</div>
+                  <div style="font:400 12.5px/1.55 'IBM Plex Sans';color:#c7cdd8;margin-top:6px">“{{ sel.decisionRationale }}”</div>
+                  <div style="font:400 10.5px 'IBM Plex Mono';color:#6b7381;margin-top:7px">A. Reyes · {{ sel.decisionTime }}</div>
+                </div>
+                <button onClick="{{ sel.onReset }}" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#8a929e;font:500 11.5px 'IBM Plex Sans';padding:6px 12px;border-radius:8px;cursor:pointer">Undo</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ sel.gateOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="font:600 12.5px 'IBM Plex Sans';color:#eef1f6;margin-bottom:9px">{{ sel.gatePrompt }}</div>
+              <textarea value="{{ rationaleText }}" onInput="{{ onRationale }}" placeholder="Document your reasoning — this becomes the permanent audit record for this decision…" style="width:100%;min-height:80px;background:#0c0e13;border:1px solid rgba(255,255,255,.14);color:#eef1f6;font:400 13px/1.5 'IBM Plex Sans';padding:12px 14px;border-radius:10px;outline:none;resize:vertical"></textarea>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+                <span style="font:500 10.5px 'IBM Plex Mono';color:{{ rationaleCountColor }}">{{ rationaleCount }}</span>
+                <div style="margin-left:auto;display:flex;gap:10px">
+                  <button onClick="{{ cancelGate }}" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#aab2bf;font:600 13px 'IBM Plex Sans';padding:11px 18px;border-radius:10px;cursor:pointer">Cancel</button>
+                  <button onClick="{{ commitGate }}" style="{{ confirmStyle }}">{{ confirmLabel }}</button>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ sel.showButtons }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <button onClick="{{ sel.onDismiss }}" style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:#37d68a;border:1px solid rgba(55,214,138,.42);font:600 13.5px 'IBM Plex Sans';padding:12px 20px;border-radius:10px;cursor:pointer"><span style="font-family:'IBM Plex Mono'">✓</span> {{ sel.dismissLabel }}</button>
+                <button onClick="{{ sel.onApprove }}" style="display:inline-flex;align-items:center;gap:8px;background:#ff5245;color:#fff;border:none;font:600 13.5px 'IBM Plex Sans';padding:12px 20px;border-radius:10px;cursor:pointer;box-shadow:0 5px 16px rgba(255,82,69,.3)"><span style="font-family:'IBM Plex Mono'">▲</span> {{ sel.approveLabel }}</button>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- 09 audit -->
+          <div style="{{ secHead }}"><span style="{{ secNum }}">09</span><span style="{{ secTitle }}">Audit trail</span><span style="{{ secSub }}">every action, logged</span></div>
+          <div style="background:#0c0e13;border:1px solid rgba(255,255,255,.07);border-radius:12px;overflow:hidden">
+            <sc-for list="{{ sel.audit }}" as="e" hint-placeholder-count="5">
+              <div style="display:flex;gap:14px;align-items:flex-start;padding:11px 16px;border-top:1px solid rgba(255,255,255,.05)">
+                <span style="font:500 10.5px 'IBM Plex Mono';color:#6b7381;min-width:56px;flex:none">{{ e.t }}</span>
+                <span style="font:600 10.5px 'IBM Plex Mono';color:{{ e.color }};min-width:74px;flex:none">{{ e.who }}</span>
+                <span style="font:400 12px/1.45 'IBM Plex Sans';color:#aab2bf">{{ e.what }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ============ LIVE TRIAGE ============ -->
+    <sc-if value="{{ isLive }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;height:100vh">
+      <div style="width:340px;flex:none;border-right:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;background:#0a0c10">
+        <div style="padding:18px 20px 12px">
+          <div style="font:700 16px 'IBM Plex Sans'">Alert queue</div>
+          <div style="font:400 11.5px 'IBM Plex Mono';color:#6b7381;margin-top:2px">select an alert to investigate live</div>
+        </div>
+        <div style="flex:1;overflow-y:auto;padding:4px 12px 20px">
+          <sc-for list="{{ queue }}" as="q" hint-placeholder-count="4">
+            <button onClick="{{ q.onSelect }}" style="{{ q.style }}">
+              <div style="display:flex;align-items:center;gap:9px">
+                <span style="width:9px;height:9px;border-radius:50%;background:{{ q.dot }};flex:none"></span>
+                <span style="font:600 13px 'IBM Plex Mono';color:#eef1f6">txn {{ q.id }}</span>
+                <span style="margin-left:auto;font:500 10px 'IBM Plex Mono';color:{{ q.tagColor }}">{{ q.tag }}</span>
+              </div>
+              <div style="margin-top:8px;font:500 12px 'IBM Plex Sans';color:#8a929e">{{ q.summary }}</div>
+            </button>
+          </sc-for>
+        </div>
+        <div style="padding:14px 18px;border-top:1px solid rgba(255,255,255,.06)">
+          <button onClick="{{ runLive }}" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#ff5245;color:#fff;border:none;font:600 13.5px 'IBM Plex Sans';padding:13px;border-radius:11px;cursor:pointer;box-shadow:0 5px 16px rgba(255,82,69,.3);{{ runBtnState }}"><span style="font-family:'IBM Plex Mono'">{{ runBtnIcon }}</span> {{ runBtnLabel }}</button>
+        </div>
+      </div>
+
+      <div style="flex:1;min-width:0;overflow-y:auto">
+        <div style="padding:26px 34px 70px;max-width:940px">
+          <sc-if value="{{ liveIdle }}" hint-placeholder-val="{{ true }}">
+            <div style="height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px">
+              <span style="width:56px;height:56px;border-radius:15px;background:#101319;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff5245" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.6" fill="#ff5245" stroke="none"/></svg>
+              </span>
+              <div style="font:600 17px 'IBM Plex Sans'">Ready to investigate</div>
+              <div style="max-width:420px;font:400 13px/1.6 'IBM Plex Sans';color:#8a929e">Pick an alert from the queue and run the full agent pipeline live (~30–60s). You'll get the same report as Case Files and make the final call.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ liveStarted }}" hint-placeholder-val="{{ false }}">
+          <div style="font:700 18px 'IBM Plex Sans';margin-bottom:4px">Investigating txn {{ live.id }}</div>
+          <div style="font:400 12px 'IBM Plex Mono';color:#6b7381;margin-bottom:20px">{{ live.rec }} · running multi-agent pipeline</div>
+          <div style="position:relative;padding-left:6px">
+            <sc-for list="{{ liveNodes }}" as="n" hint-placeholder-count="6">
+              <div style="display:flex;gap:16px;align-items:flex-start;position:relative;padding-bottom:18px">
+                <div style="display:flex;flex-direction:column;align-items:center;flex:none">
+                  <span style="{{ n.dotStyle }}"></span>
+                  <span style="{{ n.lineStyle }}"></span>
+                </div>
+                <div style="padding-top:1px">
+                  <div style="font:600 13.5px 'IBM Plex Sans';color:{{ n.labelColor }}">{{ n.label }}</div>
+                  <div style="font:500 11.5px/1.5 'IBM Plex Mono';color:{{ n.logColor }};margin-top:3px">{{ n.log }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{ liveDone }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px;animation:fadeUp .35s ease">
+            <div style="border-radius:14px;padding:20px 22px;{{ live.recBg }}">
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <span style="font:600 20px 'IBM Plex Mono';color:{{ live.recColor }}">{{ live.recIcon }}</span>
+                <span style="font:700 20px 'IBM Plex Sans';color:{{ live.recColor }}">Recommendation: {{ live.rec }}</span>
+                <span style="margin-left:auto;font:500 12px 'IBM Plex Mono';color:#aab2bf">risk <b style="color:{{ live.recColor }}">{{ live.riskFmt }}</b> · conf <b style="color:#eef1f6">{{ live.confFmt }}</b></span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:14px">
+              <sc-for list="{{ live.alertCards }}" as="k" hint-placeholder-count="4">
+                <div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 15px">
+                  <div style="font:500 11px 'IBM Plex Sans';color:#8a929e">{{ k.label }}</div>
+                  <div style="font:600 19px 'IBM Plex Mono';margin-top:5px">{{ k.value }}</div>
+                  <div style="font:500 10.5px 'IBM Plex Mono';margin-top:4px;color:{{ k.subColor }}">{{ k.sub }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:9px;flex-wrap:wrap">
+              <sc-for list="{{ live.signals }}" as="s" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:8px;font:500 12.5px 'IBM Plex Mono';padding:8px 13px;border-radius:8px;{{ s.style }}"><span style="width:7px;height:7px;border-radius:50%;background:{{ s.dot }}"></span>{{ s.label }}</span></sc-for>
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ live.criticPasses }}" as="p" hint-placeholder-count="1">
+                <div style="display:flex;gap:13px;align-items:flex-start;border-radius:12px;padding:13px 15px;{{ p.bg }}">
+                  <span style="width:22px;height:22px;flex:none;border-radius:7px;display:flex;align-items:center;justify-content:center;font:600 12px 'IBM Plex Mono';color:{{ p.badgeColor }};border:1px solid {{ p.badgeColor }}">{{ p.badge }}</span>
+                  <div><div style="font:600 12px 'IBM Plex Sans'">Critic pass {{ p.n }} · {{ p.statusText }}</div><div style="font:400 12px/1.5 'IBM Plex Sans';color:#aab2bf;margin-top:3px">{{ p.text }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- live gate -->
+            <div style="margin-top:20px;border:1px solid rgba(255,82,69,.25);background:linear-gradient(180deg,rgba(255,82,69,.06),rgba(255,82,69,.015));border-radius:14px;padding:20px 22px">
+              <div style="font:600 10px 'IBM Plex Mono';letter-spacing:1px;color:#ff8078">HUMAN APPROVAL GATE</div>
+              <div style="font:400 12.5px/1.6 'IBM Plex Sans';color:#aab2bf;margin:8px 0 16px">You are the final decision-maker on txn {{ live.id }}. Your rationale is logged.</div>
+              <sc-if value="{{ live.decided }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:13px;align-items:flex-start;padding:15px 16px;border-radius:12px;{{ live.decisionBg }}">
+                  <span style="font:600 16px 'IBM Plex Mono';color:{{ live.decisionColor }}">{{ live.decisionIcon }}</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font:600 13.5px 'IBM Plex Sans';color:{{ live.decisionColor }}">{{ live.decisionText }}</div>
+                    <div style="font:400 12.5px/1.55 'IBM Plex Sans';color:#c7cdd8;margin-top:6px">“{{ live.decisionRationale }}”</div>
+                    <div style="font:400 10.5px 'IBM Plex Mono';color:#6b7381;margin-top:7px">A. Reyes · {{ live.decisionTime }}</div>
+                  </div>
+                  <button onClick="{{ live.onReset }}" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#8a929e;font:500 11.5px 'IBM Plex Sans';padding:6px 12px;border-radius:8px;cursor:pointer">Undo</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ live.gateOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="font:600 12.5px 'IBM Plex Sans';color:#eef1f6;margin-bottom:9px">{{ live.gatePrompt }}</div>
+                <textarea value="{{ rationaleText }}" onInput="{{ onRationale }}" placeholder="Document your reasoning — this becomes the permanent audit record…" style="width:100%;min-height:80px;background:#0c0e13;border:1px solid rgba(255,255,255,.14);color:#eef1f6;font:400 13px/1.5 'IBM Plex Sans';padding:12px 14px;border-radius:10px;outline:none;resize:vertical"></textarea>
+                <div style="display:flex;align-items:center;gap:12px;margin-top:12px">
+                  <span style="font:500 10.5px 'IBM Plex Mono';color:{{ rationaleCountColor }}">{{ rationaleCount }}</span>
+                  <div style="margin-left:auto;display:flex;gap:10px">
+                    <button onClick="{{ cancelGate }}" style="background:transparent;border:1px solid rgba(255,255,255,.16);color:#aab2bf;font:600 13px 'IBM Plex Sans';padding:11px 18px;border-radius:10px;cursor:pointer">Cancel</button>
+                    <button onClick="{{ commitGate }}" style="{{ confirmStyle }}">{{ confirmLabel }}</button>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ live.showButtons }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:12px;flex-wrap:wrap">
+                  <button onClick="{{ live.onDismiss }}" style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:#37d68a;border:1px solid rgba(55,214,138,.42);font:600 13.5px 'IBM Plex Sans';padding:12px 20px;border-radius:10px;cursor:pointer"><span style="font-family:'IBM Plex Mono'">✓</span> {{ live.dismissLabel }}</button>
+                  <button onClick="{{ live.onApprove }}" style="display:inline-flex;align-items:center;gap:8px;background:#ff5245;color:#fff;border:none;font:600 13.5px 'IBM Plex Sans';padding:12px 20px;border-radius:10px;cursor:pointer;box-shadow:0 5px 16px rgba(255,82,69,.3)"><span style="font-family:'IBM Plex Mono'">▲</span> {{ live.approveLabel }}</button>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ============ ASK ARGUS ============ -->
+    <sc-if value="{{ isAsk }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:0 0 40px">
+      <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 34px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div>
+          <div style="font:700 19px 'IBM Plex Sans';letter-spacing:-.2px">Ask Argus</div>
+          <div style="font:400 12.5px 'IBM Plex Mono';color:#6b7381;margin-top:2px">grounded in the case record — never guesses</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <sc-for list="{{ askChips }}" as="c" hint-placeholder-count="6"><button onClick="{{ c.onSelect }}" style="{{ c.style }}">{{ c.id }}</button></sc-for>
+        </div>
+      </header>
+      <div style="max-width:820px;padding:24px 34px;animation:fadeUp .3s ease">
+        <div style="font:600 10.5px 'IBM Plex Mono';letter-spacing:1px;color:#6b7381;margin-bottom:10px">SUGGESTED · CASE {{ askCaseId }}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px">
+          <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3"><button onClick="{{ s.onClick }}" style="text-align:left;background:#101319;border:1px solid rgba(255,255,255,.09);color:#aab2bf;font:500 12.5px/1.45 'IBM Plex Sans';padding:13px 15px;border-radius:11px;cursor:pointer">{{ s.text }}</button></sc-for>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:22px">
+          <sc-for list="{{ thread }}" as="m" hint-placeholder-count="0">
+            <div>
+              <div style="display:flex;justify-content:flex-end;margin-bottom:9px"><span style="background:#1d3352;color:#cfe4ff;font:500 13px/1.55 'IBM Plex Sans';padding:11px 15px;border-radius:13px 13px 3px 13px;max-width:78%">{{ m.q }}</span></div>
+              <div style="display:flex;gap:10px;align-items:flex-start">
+                <span style="width:26px;height:26px;flex:none;border-radius:8px;background:#ff5245;display:flex;align-items:center;justify-content:center;margin-top:2px"><span style="width:11px;height:12px;background:#fff;display:block;clip-path:polygon(50% 0,100% 22%,100% 58%,50% 100%,0 58%,0 22%)"></span></span>
+                <span style="background:#101319;border:1px solid rgba(255,255,255,.08);color:#c7cdd8;font:400 13px/1.65 'IBM Plex Sans';padding:13px 16px;border-radius:3px 13px 13px 13px;max-width:82%">{{ m.a }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;gap:10px;position:sticky;bottom:20px">
+          <input value="{{ askInput }}" onInput="{{ onAskInput }}" onKeyDown="{{ onAskKey }}" placeholder="Ask about case {{ askCaseId }} — e.g. what pointed to a mule account?" style="flex:1;background:#101319;border:1px solid rgba(255,255,255,.13);color:#eef1f6;font:400 13.5px 'IBM Plex Sans';padding:13px 16px;border-radius:11px;outline:none">
+          <button onClick="{{ onAsk }}" style="background:#ff5245;color:#fff;border:none;font:600 13.5px 'IBM Plex Sans';padding:0 22px;border-radius:11px;cursor:pointer">Ask</button>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:24px;right:24px;z-index:60;background:#14181f;border:1px solid rgba(255,255,255,.12);border-left:3px solid {{ toastColor }};border-radius:12px;padding:14px 18px;box-shadow:0 14px 44px rgba(0,0,0,.55);animation:toastIn .25s ease;max-width:340px">
+      <div style="font:600 12.5px 'IBM Plex Sans'">{{ toastTitle }}</div>
+      <div style="font:400 12px/1.5 'IBM Plex Mono';color:#8a929e;margin-top:4px">{{ toastBody }}</div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    tab: 'overview',
+    caseId: '6102387',
+    caseFilter: 'all',
+    queueId: '6102387',
+    live: { started:false, running:false, done:false, nodes:['pending','pending','pending','pending','pending','pending'], log:[] },
+    decisions: {},
+    audit: {},
+    pendingAction: null,
+    rationaleText: '',
+    askCaseId: '6102387',
+    askInput: '',
+    threads: {},
+    toast: null,
+  };
+  _timers = [];
+  money(n){ return '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  nowT(){ return new Date().toTimeString().slice(0,8); }
+
+  genHistory(typical, id){
+    let h=2166136261>>>0;
+    for(let i=0;i<id.length;i++){ h^=id.charCodeAt(i); h=Math.imul(h,16777619)>>>0; }
+    const rnd=()=>{ h^=h<<13;h>>>=0;h^=h>>>17;h^=h<<5;h>>>=0;return (h>>>0)/4294967296; };
+    const arr=[]; for(let i=0;i<15;i++){ arr.push(typical*(0.45+rnd()*1.05)); } return arr;
+  }
+
+  buildCases(){
+    const BASE = [
+      { id:'6102387', truth:'fraud', rec:'ESCALATE', risk:0.94, conf:0.97,
+        alert:{account:'C7401928834', type:'CASH_OUT', amount:356224.26, dest:'C1420553097', hour:8, before:356224.26, after:0.00},
+        sender:[['typical amount','$3,880.40'],['largest ever sent','$12,004.00'],['transactions seen','54'],['first seen','hour 0']],
+        counter:[['merchant','no'],['distinct senders in','118'],['zero-bal rate','0.94'],['held balance','$0.00']],
+        velocity:[['out txns / 24h','6'],['moved in window',this.money(1980114.00)],['destinations','1'],['burst score','0.91']],
+        signals:[['Exact Balance Drain','crit'],['Scripted Account-Takeover','crit'],['TRANSFER→CASH_OUT Chain','warn'],['Mule Counterparty','crit']],
+        policy:[
+          ['large_transfer',true,'Above the large-transaction threshold?','356,224.26 vs 200,000'],
+          ['exact_balance_drain',true,'Amount equals balance to the cent?','356,224.26 == 356,224.26 → True'],
+          ['near_balance_drain',true,'Empties most of the balance?','356,224.26 → 0.00'],
+          ['velocity_burst',true,'Unusually many outgoing txns?','6 in 24 steps'],
+          ['mule_counterparty',true,'Receiver looks like a mule?','zero-bal 0.94 · 118 senders'],
+        ],
+        policyVerdict:'ESCALATE', policyNote:'4 high-severity rules fired',
+        critic:{ok:true, text:'Approved.'},
+        reasoning:[['Model','risk 0.94 vs threshold 0.70 → confident fraud'],['Policy','ESCALATE — exact_balance_drain + mule are high-severity'],['Fusion','both confident → ESCALATE']] },
+
+      { id:'442019', truth:'fraud', rec:'ESCALATE', risk:0.88, conf:0.93,
+        alert:{account:'C3392018870', type:'TRANSFER', amount:128540.00, dest:'C5510028841', hour:19, before:130200.00, after:1660.00},
+        sender:[['typical amount','$2,140.90'],['largest ever sent','$9,900.00'],['transactions seen','61'],['first seen','hour 3']],
+        counter:[['merchant','no'],['distinct senders in','203'],['zero-bal rate','0.91'],['held balance','$0.00']],
+        velocity:[['out txns / 24h','9'],['moved in window',this.money(1042220.00)],['destinations','3'],['burst score','0.84']],
+        signals:[['Mule Counterparty','crit'],['Velocity Burst','warn'],['Structuring-like Amounts','warn']],
+        policy:[
+          ['large_transfer',false,'Above the large-transaction threshold?','128,540.00 vs 200,000'],
+          ['exact_balance_drain',false,'Amount equals balance to the cent?','128,540.00 == 130,200.00 → False'],
+          ['near_balance_drain',true,'Empties most of the balance?','130,200 → 1,660 (98.7%)'],
+          ['velocity_burst',true,'Unusually many outgoing txns?','9 in 24 steps'],
+          ['mule_counterparty',true,'Receiver looks like a mule?','zero-bal 0.91 · 203 senders'],
+        ],
+        policyVerdict:'ESCALATE', policyNote:'mule + velocity_burst fired',
+        critic:{ok:true, text:'Approved.'},
+        reasoning:[['Model','risk 0.88 vs 0.70 → confident fraud'],['Policy','ESCALATE — mule high-severity'],['Fusion','both confident → ESCALATE']] },
+
+      { id:'771044', truth:'fraud', rec:'ESCALATE', risk:0.91, conf:0.96,
+        alert:{account:'C8810442290', type:'CASH_OUT', amount:499999.00, dest:'C2201884400', hour:2, before:499999.00, after:0.00},
+        sender:[['typical amount','$5,610.20'],['largest ever sent','$18,400.00'],['transactions seen','29'],['first seen','hour 1']],
+        counter:[['merchant','no'],['distinct senders in','76'],['zero-bal rate','0.88'],['held balance','$0.00']],
+        velocity:[['out txns / 24h','4'],['moved in window',this.money(1499997.00)],['destinations','2'],['burst score','0.72']],
+        signals:[['Threshold Evasion ($499,999)','crit'],['Exact Balance Drain','crit'],['Off-hours (02:00)','warn']],
+        policy:[
+          ['large_transfer',true,'Above the large-transaction threshold?','499,999.00 vs 200,000'],
+          ['exact_balance_drain',true,'Amount equals balance to the cent?','499,999.00 == 499,999.00 → True'],
+          ['near_balance_drain',true,'Empties most of the balance?','499,999 → 0.00'],
+          ['velocity_burst',false,'Unusually many outgoing txns?','4 in 24 steps'],
+          ['mule_counterparty',true,'Receiver looks like a mule?','zero-bal 0.88 · 76 senders'],
+        ],
+        policyVerdict:'ESCALATE', policyNote:'exact_drain + threshold evasion',
+        critic:{ok:true, text:'Approved.'},
+        reasoning:[['Model','risk 0.91 vs 0.70 → confident fraud'],['Policy','ESCALATE — exact_balance_drain high-severity'],['Fusion','both confident → ESCALATE']] },
+
+      { id:'135996', truth:'legit', rec:'CLEAR', risk:0.55, conf:0.90,
+        alert:{account:'C1956590348', type:'CASH_OUT', amount:603802.14, dest:'C394192047', hour:11, before:52559.00, after:0.00},
+        sender:[['typical amount','$41,220.18'],['largest ever sent','$188,004.00'],['transactions seen','37'],['first seen','hour 2']],
+        counter:[['merchant','no'],['distinct senders in','42'],['zero-bal rate','0.0'],['avg incoming','$38,110.55']],
+        velocity:[['out txns / 24h','1'],['moved in window',this.money(603802.14)],['destinations','1'],['burst score','0.08']],
+        signals:[['Unusual Account Drain','warn'],['Non-Merchant, Many Senders','warn']],
+        policy:[
+          ['large_transfer',true,'Above the large-transaction threshold?','603,802.14 vs 200,000'],
+          ['exact_balance_drain',false,'Amount equals balance to the cent?','603,802.14 == 52,559.00 → False'],
+          ['near_balance_drain',true,'Empties most of the balance?','52,559 → 0.00'],
+          ['velocity_burst',false,'Unusually many outgoing txns?','1 in 24 steps'],
+          ['mule_counterparty',false,'Receiver looks like a mule?','zero-bal 0.0 · 42 senders'],
+        ],
+        policyVerdict:'CLEAR', policyNote:'no high-severity rule fired',
+        critic:{ok:true, text:'Approved.'},
+        reasoning:[['Model','risk 0.55 vs 0.70 → below the escalation bar'],['Policy','CLEAR — only low-severity near_drain fired'],['Fusion','analyzer leans fraud but is not confident, policy clears → CLEAR']] },
+
+      { id:'88123', truth:'legit', rec:'CLEAR', risk:0.12, conf:0.95,
+        alert:{account:'C4420019983', type:'PAYMENT', amount:2430.55, dest:'M1099420018', hour:14, before:18220.00, after:15789.45},
+        sender:[['typical amount','$2,050.10'],['largest ever sent','$4,900.00'],['transactions seen','142'],['first seen','hour 0']],
+        counter:[['merchant','yes'],['distinct senders in','9,410'],['zero-bal rate','0.0'],['avg incoming','$71.20']],
+        velocity:[['out txns / 24h','3'],['moved in window',this.money(6120.00)],['destinations','3'],['burst score','0.04']],
+        signals:[['Within Normal Range','ok']],
+        policy:[
+          ['large_transfer',false,'Above the large-transaction threshold?','2,430.55 vs 200,000'],
+          ['exact_balance_drain',false,'Amount equals balance to the cent?','2,430.55 == 18,220.00 → False'],
+          ['near_balance_drain',false,'Empties most of the balance?','18,220 → 15,789 (13%)'],
+          ['velocity_burst',false,'Unusually many outgoing txns?','3 in 24 steps'],
+          ['mule_counterparty',false,'Receiver looks like a mule?','verified merchant'],
+        ],
+        policyVerdict:'CLEAR', policyNote:'no policy rule fired',
+        critic:{ok:true, text:'Approved.'},
+        reasoning:[['Model','risk 0.12 vs 0.70 → clearly benign'],['Policy','CLEAR — no rules fired'],['Fusion','neither confident → CLEAR']] },
+
+      { id:'203355', truth:'legit', rec:'CLEAR', risk:0.18, conf:0.90,
+        alert:{account:'C6620335512', type:'TRANSFER', amount:15200.00, dest:'C6620335999', hour:9, before:88400.00, after:73200.00},
+        sender:[['typical amount','$14,900.00'],['largest ever sent','$16,000.00'],['transactions seen','88'],['first seen','hour 0']],
+        counter:[['merchant','no'],['distinct senders in','2'],['zero-bal rate','0.0'],['avg incoming','$14,880.00']],
+        velocity:[['out txns / 24h','1'],['moved in window',this.money(15200.00)],['destinations','1'],['burst score','0.06']],
+        signals:[['Recurring Known Counterparty','ok']],
+        policy:[
+          ['large_transfer',false,'Above the large-transaction threshold?','15,200.00 vs 200,000'],
+          ['exact_balance_drain',false,'Amount equals balance to the cent?','15,200.00 == 88,400.00 → False'],
+          ['near_balance_drain',false,'Empties most of the balance?','88,400 → 73,200 (17%)'],
+          ['velocity_burst',false,'Unusually many outgoing txns?','1 in 24 steps'],
+          ['mule_counterparty',false,'Receiver looks like a mule?','recurring destination'],
+        ],
+        policyVerdict:'CLEAR', policyNote:'no policy rule fired',
+        critic:{ok:true, text:'Approved.'},
+        reasoning:[['Model','risk 0.18 vs 0.70 → benign'],['Policy','CLEAR — no rules fired'],['Fusion','neither confident → CLEAR']] },
+    ];
+
+    const META = {
+      '6102387':{ typical:3880.40, flow:{destKind:'mule',fanIn:118,zeroBal:'0.94',isCashOut:true},
+        criticPasses:[{flag:true,text:'Analyzer\u2019s draft claimed \u201c12 outgoing transfers in the last 24h.\u201d The evidence bundle shows 6 \u2014 the claim was sent back for revision.'},{flag:false,text:'Revised velocity (6) now matches the compute_velocity tool output. Exact-drain, takeover and mule claims are all supported. Approved.'}] },
+      '442019':{ typical:2140.90, flow:{destKind:'mule',fanIn:203,zeroBal:'0.91',isCashOut:false},
+        criticPasses:[{flag:true,text:'Analyzer described \u201cstructuring across 5 accounts.\u201d Retriever data shows 3 distinct destinations \u2014 overstated count returned for correction.'},{flag:false,text:'Corrected to 3 destinations. Mule pass-through (0.91 across 203 senders) and remaining claims verified. Approved.'}] },
+      '771044':{ typical:5610.20, flow:{destKind:'mule',fanIn:76,zeroBal:'0.88',isCashOut:true},
+        criticPasses:[{flag:false,text:'All claims supported on the first pass \u2014 the $499,999 threshold-evasion amount and the exact drain both verified against the evidence. Approved.'}] },
+      '135996':{ typical:41220.18, flow:{destKind:'internal',fanIn:42,zeroBal:'0.0',isCashOut:true},
+        criticPasses:[{flag:true,text:'Analyzer framed this as a \u201cfull account takeover.\u201d Evidence shows one large but isolated cash-out to a clean, non-mule counterparty \u2014 the overstatement was removed.'},{flag:false,text:'Reframed as elevated-but-benign. Counterparty stats (0.0 pass-through, 42 legitimate senders) confirm the reframing. Approved.'}] },
+      '88123':{ typical:2050.10, flow:{destKind:'merchant',fanIn:9410,zeroBal:'0.0',isCashOut:false},
+        criticPasses:[{flag:false,text:'Payment to a verified merchant, within the customer\u2019s normal spend. No claims to challenge. Approved.'}] },
+      '203355':{ typical:14900.00, flow:{destKind:'internal',fanIn:2,zeroBal:'0.0',isCashOut:false},
+        criticPasses:[{flag:false,text:'Recurring transfer to an established counterparty. All claims match the record. Approved.'}] },
+    };
+    return BASE.map(c=>({ ...c, ...META[c.id], history:this.genHistory(META[c.id].typical, c.id) }));
+  }
+  cases=null;
+  getCases(){ if(!this.cases) this.cases=this.buildCases(); return this.cases; }
+  caseById(id){ return this.getCases().find(c=>c.id===id)||this.getCases()[0]; }
+  componentWillUnmount(){ this._timers.forEach(clearTimeout); }
+
+  showToast(title, body, color){
+    this.setState({toast:{title,body,color}});
+    this._timers.push(setTimeout(()=>this.setState(s=> s.toast&&s.toast.title===title?{toast:null}:{}),4200));
+  }
+  riskColor(r){ return r>=0.7?'#ff5245':(r>=0.4?'#f4b13c':'#37d68a'); }
+  riskBand(r){ return r>=0.7?'HIGH':(r>=0.4?'ELEVATED':'LOW'); }
+
+  openGate(id,action){ this.setState({pendingAction:{caseId:id,action}, rationaleText:''}); }
+  cancelGate(){ this.setState({pendingAction:null, rationaleText:''}); }
+  commitGate(){
+    const pa=this.state.pendingAction; if(!pa) return;
+    const r=(this.state.rationaleText||'').trim(); if(r.length<8) return;
+    const ts=this.nowT();
+    this.setState(s=>{
+      const d={...s.decisions}; d[pa.caseId]=pa.action;
+      const au={...s.audit}; au[pa.caseId]=[...(au[pa.caseId]||[]),{ts,action:pa.action,rationale:r}];
+      return {decisions:d, audit:au, pendingAction:null, rationaleText:''};
+    });
+    if(pa.action==='approved') this.showToast('Escalation approved','txn '+pa.caseId+' frozen (simulated) · logged to audit trail','#ff5245');
+    else this.showToast('Alert cleared','txn '+pa.caseId+' dismissed · logged to audit trail','#37d68a');
+  }
+  undoDecision(id){
+    this.setState(s=>{ const d={...s.decisions}; delete d[id]; const au={...s.audit}; if(au[id]) au[id]=au[id].slice(0,-1); return {decisions:d, audit:au}; });
+  }
+
+  expand(c){
+    const dec=this.state.decisions[c.id];
+    const isEsc=c.rec==='ESCALATE';
+    const recColor=isEsc?'#ff5245':'#37d68a';
+    const a=c.alert; const delta=a.after-a.before;
+    const deltaFmt=(delta<0?'\u25be ':'\u25b4 ')+this.money(Math.abs(delta));
+    const rc=this.riskColor(c.risk);
+    const sig=(sev)=> sev==='crit'?{style:'background:rgba(255,82,69,.13);border:1px solid rgba(255,82,69,.3);color:#ff8078',dot:'#ff5245'}
+      : sev==='warn'?{style:'background:rgba(244,177,60,.12);border:1px solid rgba(244,177,60,.3);color:#f4c46a',dot:'#f4b13c'}
+      : {style:'background:rgba(55,214,138,.1);border:1px solid rgba(55,214,138,.28);color:#6fe0ac',dot:'#37d68a'};
+    const recBadge=isEsc?'background:rgba(255,82,69,.15);color:#ff8078':'background:rgba(55,214,138,.14);color:#6fe0ac';
+
+    // baseline chart
+    const hist=c.history||[];
+    const maxV=Math.max.apply(null,hist.concat([a.amount, c.typical]));
+    const histBars=hist.map(v=>({style:'flex:1;min-width:3px;height:'+Math.max(4,Math.round(v/maxV*56))+'px;background:rgba(255,255,255,.13);border-radius:2px 2px 0 0'}));
+    const alertBarStyle='flex:1;min-width:3px;height:'+Math.max(7,Math.round(a.amount/maxV*56))+'px;background:'+rc+';border-radius:2px 2px 0 0;box-shadow:0 0 12px '+(isEsc?'rgba(255,82,69,.55)':'rgba(244,177,60,.45)');
+    const typLineStyle='position:absolute;left:0;right:0;bottom:'+Math.round(c.typical/maxV*56)+'px;border-top:1px dashed rgba(255,255,255,.26)';
+    const mult=a.amount/c.typical; const multFmt=(mult>=10?Math.round(mult):mult.toFixed(1))+'\u00d7';
+    let baselineNote;
+    if(mult<3) baselineNote='Amount sits within this account\u2019s normal range ('+multFmt+' its typical). Nothing unusual about the size.';
+    else if(isEsc) baselineNote='This transaction is '+multFmt+' larger than anything this account normally sends \u2014 a classic balance-drain signature.';
+    else baselineNote='This is '+multFmt+' the account\u2019s typical amount, but the destination is an established, clean counterparty \u2014 which is why Argus still cleared it.';
+
+    // money flow
+    const fk=c.flow.destKind;
+    const fcol= fk==='mule'?'#ff5245':(fk==='merchant'?'#37d68a':'#6ea2ff');
+    const flow={ sender:a.account.slice(0,8), dest:a.dest.slice(0,8), amount:this.money(a.amount), typeLabel:a.type.toLowerCase(),
+      destColor:fcol, destLabel: fk==='mule'?'Mule account':(fk==='merchant'?'Verified merchant':'Customer account'),
+      destBadge: fk==='mule'?'PASS-THRU':(fk==='merchant'?'VERIFIED':'HOLDS BAL'),
+      destBg: fk==='mule'?'rgba(255,82,69,.07)':(fk==='merchant'?'rgba(55,214,138,.06)':'rgba(110,162,255,.06)'),
+      destBorder: fk==='mule'?'rgba(255,82,69,.32)':(fk==='merchant'?'rgba(55,214,138,.3)':'rgba(110,162,255,.3)'),
+      fanLabel:'\u00d7'+c.flow.fanIn+' in', isCashOut:c.flow.isCashOut,
+      fanNote: fk==='mule'? c.flow.zeroBal+' of inflow passes straight through \u2014 textbook mule' : (fk==='merchant'?'aggregates many customers (normal for a merchant)':'destination retains its balance (normal)'),
+      fanDots: [0,1,2,3,4,5].map(()=>({c: fk==='mule'?'rgba(255,82,69,.55)':(fk==='merchant'?'rgba(55,214,138,.5)':'rgba(110,162,255,.5)')})) };
+
+    // critic revision loop
+    const passes=c.criticPasses||[{flag:false,text:c.critic.text}];
+    const revised=passes.length>1;
+    const criticPasses=passes.map((p,i)=>({ n:i+1, statusText:p.flag?'flagged \u2014 sent back for revision':'approved',
+      badge:p.flag?'\u26a0':'\u2713', badgeColor:p.flag?'#f4b13c':'#37d68a',
+      bg:p.flag?'background:rgba(244,177,60,.07);border:1px solid rgba(244,177,60,.26)':'background:rgba(55,214,138,.06);border:1px solid rgba(55,214,138,.24)',
+      text:p.text }));
+
+    // analyzer vs policy
+    const analyzerFlags=c.risk>=0.5; const policyEsc=c.policyVerdict==='ESCALATE';
+    const analyzerLean=analyzerFlags?'FLAGS FRAUD':'READS BENIGN'; const analyzerColor=analyzerFlags?'#ff8078':'#6fe0ac';
+    const agree=analyzerFlags===policyEsc;
+    const agreeText=agree?'Both agents agree':'Agents disagree \u2014 resolved by fusion rule';
+    const agreeIcon=agree?'\u2713':'\u26a0'; const agreeColor=agree?'#6fe0ac':'#f4b13c';
+    const agreeBg=agree?'rgba(55,214,138,.06)':'rgba(244,177,60,.08)'; const agreeBorder=agree?'rgba(55,214,138,.24)':'rgba(244,177,60,.3)';
+
+    // audit trail
+    const revTxt=revised?'pass 1 flagged \u2192 pass 2 approved':'pass 1 approved';
+    const sysEvents=[
+      {t:'14:22:01', who:'retriever', what:'4 data tools called · evidence bundle assembled', color:'#6ea2ff'},
+      {t:'14:22:05', who:'analyzer', what:'risk '+c.risk.toFixed(2)+' · '+c.signals.length+' signal(s) flagged', color:'#f4b13c'},
+      {t:'14:22:06', who:'policy', what:'5 rules evaluated · verdict '+c.policyVerdict, color:'#f4b13c'},
+      {t:'14:22:08', who:'critic', what:revTxt+' · 0 hallucinated figures', color:'#ff5245'},
+      {t:'14:22:09', who:'assembler', what:'case file built · status PENDING_HUMAN_APPROVAL', color:'#37d68a'},
+    ];
+    const auEntries=this.state.audit[c.id]||[];
+    const humanEvents=auEntries.map(e=>({ t:e.ts, who:'A. Reyes', color:e.action==='approved'?'#ff8078':'#6fe0ac',
+      what:(e.action==='approved'?'APPROVED · escalate & freeze':'DISMISSED · clear alert')+' — \u201c'+e.rationale+'\u201d' }));
+    const auditView=sysEvents.concat(humanEvents);
+    const lastHuman=auEntries[auEntries.length-1];
+
+    // gate
+    const pa=this.state.pendingAction; const gateOpen=!!(pa&&pa.caseId===c.id);
+    const gatePrompt=gateOpen?(pa.action==='approved'?'Confirm escalation — this freezes txn '+c.id:'Confirm dismissal — this clears txn '+c.id):'';
+
+    return {
+      id:c.id, rec:c.rec, recColor, recBadge, recIcon:isEsc?'\u25b2':'\u2713',
+      recBg:isEsc?'background:rgba(255,82,69,.08);border:1px solid rgba(255,82,69,.28)':'background:rgba(55,214,138,.07);border:1px solid rgba(55,214,138,.26)',
+      riskFmt:c.risk.toFixed(2), confFmt:c.conf.toFixed(2),
+      riskColor:rc, riskBand:this.riskBand(c.risk), meterStyle:'height:100%;width:'+Math.round(c.risk*100)+'%;background:'+rc+';border-radius:3px',
+      truthText:c.truth==='fraud'?'actually fraud':'actually legitimate', truthColor:c.truth==='fraud'?'#ff8078':'#6fe0ac',
+      alertLine:'Account '+a.account+' initiated a '+a.type+' of '+this.money(a.amount)+' to '+a.dest+' at simulation hour '+a.hour+'.',
+      alertCards:[
+        {label:'Amount',value:this.money(a.amount),sub:a.type,subColor:'#8a929e'},
+        {label:'Balance before',value:this.money(a.before),sub:'pre-txn',subColor:'#8a929e'},
+        {label:'Balance after',value:this.money(a.after),sub:deltaFmt,subColor:delta<0?'#ff8078':'#6fe0ac'},
+        {label:'Destination',value:a.dest.slice(0,7),sub:'hour '+a.hour,subColor:'#8a929e'},
+      ],
+      sender:c.sender.map(r=>({k:r[0],v:r[1]})), counter:c.counter.map(r=>({k:r[0],v:r[1]})), velocity:c.velocity.map(r=>({k:r[0],v:r[1]})),
+      signals:c.signals.map(s=>{const t=sig(s[1]);return{label:s[0],dot:t.dot,style:t.style};}),
+      policyRows:c.policy.map(p=>({rule:p[0],firedText:p[1]?'\u25cf FIRED':'\u2014 clear',firedColor:p[1]?'#ff5245':'#59616e',checks:p[2],values:p[3]})),
+      policyVerdict:c.policyVerdict, policyVerdictColor:c.policyVerdict==='ESCALATE'?'#ff5245':'#37d68a', policyNote:c.policyNote,
+      reasoning:c.reasoning.map(r=>({k:r[0],v:r[1]})),
+      histBars, alertBarStyle, typLineStyle, multFmt, baselineNote,
+      flow, criticPasses,
+      analyzerLean, analyzerColor, agree, agreeText, agreeIcon, agreeColor, agreeBg, agreeBorder,
+      audit:auditView,
+      trace:[['Orchestrator','planned'],['Retriever','evidence'],['Analyzer','risk '+c.risk.toFixed(2)],['Policy',c.policyVerdict.toLowerCase()],['Critic',revised?'revised \u2192 ok':'approved'],['Case File','assembled']].map((t,i,arr)=>({label:t[0],cap:t[1],connStyle:i===arr.length-1?'display:none':'width:26px;height:1px;background:rgba(255,255,255,.14)'})),
+      approveLabel:isEsc?'Approve escalation':'Override → escalate',
+      dismissLabel:isEsc?'Dismiss alert':'Confirm clear',
+      decided:!!dec, gateOpen, gatePrompt, showButtons: !dec && !gateOpen,
+      decisionText:dec==='approved'?'Escalated & frozen (simulated)':'Cleared — alert dismissed',
+      decisionColor:dec==='approved'?'#ff8078':'#6fe0ac', decisionIcon:dec==='approved'?'\u25b2':'\u2713',
+      decisionBg:dec==='approved'?'background:rgba(255,82,69,.1);border:1px solid rgba(255,82,69,.3)':'background:rgba(55,214,138,.1);border:1px solid rgba(55,214,138,.28)',
+      decisionRationale:lastHuman?lastHuman.rationale:'', decisionTime:lastHuman?lastHuman.ts:'',
+      onApprove:()=>this.openGate(c.id,'approved'), onDismiss:()=>this.openGate(c.id,'dismissed'), onReset:()=>this.undoDecision(c.id),
+    };
+  }
+
+  runLive(){
+    this._timers.forEach(clearTimeout); this._timers=[];
+    const c=this.caseById(this.state.queueId);
+    const sigNames=c.signals.map(s=>s[0]).slice(0,2).join(', ');
+    const fired=c.policy.filter(p=>p[1]).length;
+    const revised=(c.criticPasses||[]).length>1;
+    const logs=[
+      'plan: retrieve \u2192 analyze \u2192 policy \u2192 critic \u2192 assemble',
+      'get_transaction('+c.id+') \u2713  get_customer_history \u2713  get_counterparty_risk \u2713  compute_velocity \u2713',
+      'signals: '+sigNames+' \u00b7 risk score '+c.risk.toFixed(2),
+      '5 rules evaluated \u00b7 '+fired+' fired \u00b7 verdict '+c.policyVerdict,
+      revised?'pass 1 flagged a claim \u2192 revised \u2192 pass 2 approved':'verifying claims \u2026 approved \u00b7 0 hallucinated figures',
+      'case file assembled \u00b7 status PENDING_HUMAN_APPROVAL',
+    ];
+    this.setState({live:{started:true,running:true,done:false,nodes:['pending','pending','pending','pending','pending','pending'],log:[]}});
+    const STEP=900,ACT=520;
+    for(let i=0;i<6;i++){
+      this._timers.push(setTimeout(()=>this.setState(s=>{const n=[...s.live.nodes];n[i]='active';return{live:{...s.live,nodes:n}};}),i*STEP));
+      this._timers.push(setTimeout(()=>this.setState(s=>{const n=[...s.live.nodes];n[i]='done';return{live:{...s.live,nodes:n,log:[...s.live.log,logs[i]]}};}),i*STEP+ACT));
+    }
+    this._timers.push(setTimeout(()=>{this.setState(s=>({live:{...s.live,running:false,done:true}}));this.showToast('Investigation complete','txn '+c.id+' \u00b7 '+c.rec+' \u00b7 awaiting your decision',c.rec==='ESCALATE'?'#ff5245':'#37d68a');},6*STEP));
+  }
+
+  answer(c,qraw){
+    const q=qraw.toLowerCase(); const a=c.alert;
+    if(q.includes('why')&&(q.includes('escal')||q.includes('clear')||q.includes('decid')||q.includes('recommend')))
+      return 'Argus recommended '+c.rec+' on txn '+c.id+'. The Analyzer scored risk '+c.risk.toFixed(2)+' against the 0.70 threshold, and the Policy engine returned '+c.policyVerdict+'. Under the fusion rule \u2014 escalate if either judgment is confident \u2014 the case resolved to '+c.rec+'. Ground truth for this replayed alert was '+(c.truth==='fraud'?'fraud':'legitimate')+', so Argus was correct.';
+    if(q.includes('critic'))
+      return 'The Critic re-read every claim against the raw evidence bundle. '+(((c.criticPasses||[]).length>1)?'On its first pass it flagged an overstated figure and sent the assessment back for revision; the corrected version passed on pass 2.':'All claims were supported on the first pass.')+' It confirmed the balance figures ('+this.money(a.before)+' \u2192 '+this.money(a.after)+') and counterparty stats match the retrieved data.';
+    if(q.includes('manager')||q.includes('3 sentence')||q.includes('three sentence')||q.includes('non-technical')||q.includes('plain')){
+      const verb=c.rec==='ESCALATE'?'flagged for a human to freeze':'cleared as a false alarm';
+      return 'Account '+a.account+' moved '+this.money(a.amount)+' via '+a.type+', and Argus '+verb+' it. It reached that call by gathering the account\u2019s history, scoring the risk ('+c.risk.toFixed(2)+'), and running deterministic policy rules ('+c.policyVerdict+'). A second AI fact-checked the reasoning, and the recommendation now waits on your approval.';
+    }
+    if(q.includes('mule')||q.includes('counterparty')||q.includes('receiver'))
+      return 'On the receiving side the retrieved profile shows: '+c.counter.map(r=>r[0]+' \u2014 '+r[1]).join('; ')+'. '+(c.signals.some(s=>/mule/i.test(s[0]))?'That pass-through pattern is why the Mule Counterparty signal fired.':'These values did not meet the mule threshold, so no mule signal fired.');
+    if(q.includes('evidence')||q.includes('signal'))
+      return 'The Analyzer flagged: '+c.signals.map(s=>s[0]).join(', ')+'. Supporting evidence includes sender baseline ('+c.sender.slice(0,2).map(r=>r[0]+' '+r[1]).join(', ')+') and velocity ('+c.velocity[0][0]+' '+c.velocity[0][1]+').';
+    if(q.includes('amount')||q.includes('balance'))
+      return 'The transaction was '+this.money(a.amount)+' ('+a.type+'). Sender balance went '+this.money(a.before)+' \u2192 '+this.money(a.after)+'. '+(a.after===0?'A full drain to zero, which triggered the balance-drain checks.':'The account retained a balance afterward.');
+    return 'That detail isn\u2019t in txn '+c.id+'\u2019s recorded evidence or audit trail, so I can\u2019t answer it from this case. The record does contain: a '+c.rec+' recommendation, risk '+c.risk.toFixed(2)+', '+c.signals.length+' risk signal(s), and a Critic check.';
+  }
+  ask(text){
+    const q=(text||'').trim(); if(!q) return;
+    const id=this.state.askCaseId; const c=this.caseById(id); const a=this.answer(c,q);
+    this.setState(s=>{const th={...s.threads};th[id]=[...(th[id]||[]),{q,a}];return{threads:th,askInput:''};});
+  }
+
+  renderVals(){
+    const s=this.state;
+    const navBtn=(id)=>{ const on=s.tab===id; return 'display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:'+(on?'rgba(255,82,69,.1)':'transparent')+';border:none;border-left:2px solid '+(on?'#ff5245':'transparent')+';color:'+(on?'#eef1f6':'#8a929e')+';font:600 13px \'IBM Plex Sans\';padding:11px 12px;border-radius:0 8px 8px 0;cursor:pointer'; };
+    let evalLabel='idle',evalColor='#8a929e',evalDot='width:10px;height:10px;border-radius:50%;display:inline-block;box-sizing:border-box;border:2px solid rgba(255,255,255,.25);background:transparent';
+    if(s.live.running){evalLabel='running';evalColor='#f4b13c';evalDot='width:10px;height:10px;border-radius:50%;display:inline-block;background:#f4b13c;box-shadow:0 0 0 4px rgba(244,177,60,.18);animation:pulse 1.1s infinite';}
+    else if(s.live.done){evalLabel='done';evalColor='#37d68a';evalDot='width:10px;height:10px;border-radius:50%;display:inline-block;background:#37d68a;box-shadow:0 0 0 3px rgba(55,214,138,.16)';}
+
+    const agents=[
+      {name:'Orchestrator',color:'#6ea2ff',desc:'Plans the investigation, dispatches specialists, handles retries, owns session memory.'},
+      {name:'Retriever',color:'#6ea2ff',desc:'Calls data tools to gather the transaction, history, baseline and counterparty profile. No judgments.'},
+      {name:'Analyzer',color:'#f4b13c',desc:'Reasons over evidence — amount vs baseline, velocity, balance-draining, type sequences. Outputs a risk score.'},
+      {name:'Policy',color:'#f4b13c',desc:'Runs deterministic AML / threshold rules. Same input, same answer — auditable by a regulator.'},
+      {name:'Critic',color:'#ff5245',desc:'A second model verifies every claim against the evidence. Flags unsupported figures and sends them back.'},
+      {name:'Assembler + Gate',color:'#37d68a',desc:'Compiles the case file, marks it PENDING_HUMAN_APPROVAL. No freeze executes without a human.'},
+    ];
+
+    const fLabel={all:'All',escalate:'Escalated',clear:'Cleared'};
+    const filters=['all','escalate','clear'].map(f=>({label:fLabel[f],onClick:()=>this.setState({caseFilter:f}),
+      style:'background:'+(s.caseFilter===f?'#1d222b':'transparent')+';border:1px solid '+(s.caseFilter===f?'rgba(255,255,255,.18)':'rgba(255,255,255,.09)')+';color:'+(s.caseFilter===f?'#eef1f6':'#8a929e')+';font:600 11.5px \'IBM Plex Sans\';padding:6px 12px;border-radius:8px;cursor:pointer'}));
+
+    const filtered=this.getCases().filter(c=> s.caseFilter==='all'?true:(s.caseFilter==='escalate'?c.rec==='ESCALATE':c.rec==='CLEAR'));
+    const rowStyle=(on)=>'display:block;width:100%;text-align:left;background:'+(on?'#141922':'#0d1015')+';border:1px solid '+(on?'rgba(255,82,69,.35)':'rgba(255,255,255,.06)')+';border-radius:12px;padding:13px 15px;margin-bottom:9px;cursor:pointer';
+    const caseRows=filtered.map(c=>{ const rc=this.riskColor(c.risk); const dec=s.decisions[c.id]; const isEsc=c.rec==='ESCALATE';
+      return { id:c.id, rec:c.rec, recBadge:isEsc?'background:rgba(255,82,69,.15);color:#ff8078':'background:rgba(55,214,138,.14);color:#6fe0ac',
+        riskPct:Math.round(c.risk*100), riskColor:rc, type:c.alert.type, amount:this.money(c.alert.amount), truth:c.truth,
+        meterStyle:'height:100%;width:'+Math.round(c.risk*100)+'%;background:'+rc+';border-radius:3px',
+        statusText:dec?(dec==='approved'?'ESCALATED':'CLEARED'):'PENDING', statusStyle:dec?(dec==='approved'?'color:#ff8078':'color:#6fe0ac'):'color:#59616e',
+        style:rowStyle(s.caseId===c.id), onSelect:()=>this.setState({caseId:c.id}) };
+    });
+
+    const sel=this.expand(this.caseById(s.caseId));
+
+    const secHead='display:flex;align-items:center;gap:11px;margin:30px 0 13px';
+    const secNum='font:600 11px \'IBM Plex Mono\';color:#ff5245;background:rgba(255,82,69,.12);border:1px solid rgba(255,82,69,.25);width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;flex:none';
+    const secTitle='font:600 17px \'IBM Plex Sans\'';
+    const secSub='font:400 12px \'IBM Plex Mono\';color:#6b7381';
+    const evRow='display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid rgba(255,255,255,.05);font:400 12px \'IBM Plex Sans\';color:#8a929e';
+    const evVal='color:#eef1f6;font-family:\'IBM Plex Mono\';font-weight:500';
+    const thc='padding:10px 14px;font:600 10px \'IBM Plex Mono\';letter-spacing:.6px;color:#6b7381';
+
+    const queueIds=['6102387','442019','88123','135996'];
+    const qStyle=(on)=>'display:block;width:100%;text-align:left;background:'+(on?'#141922':'#0d1015')+';border:1px solid '+(on?'rgba(255,82,69,.35)':'rgba(255,255,255,.06)')+';border-radius:12px;padding:13px 15px;margin-bottom:9px;cursor:pointer';
+    const queue=queueIds.map(id=>{const c=this.caseById(id);return{id,dot:this.riskColor(c.risk),style:qStyle(s.queueId===id),summary:c.alert.type+' '+this.money(c.alert.amount),tag:c.truth==='fraud'?'known fraud':'known legit',tagColor:c.truth==='fraud'?'#ff8078':'#6fe0ac',onSelect:()=>this.setState({queueId:id})};});
+
+    const nodeNames=['Orchestrator','Retriever','Analyzer','Policy','Critic','Case File'];
+    const liveNodes=s.live.nodes.map((st,i)=>{
+      let dot,label,logc; const last=i===5;
+      if(st==='active'){dot='width:13px;height:13px;border-radius:50%;display:inline-block;background:#ff5245;box-shadow:0 0 0 4px rgba(255,82,69,.2);animation:pulse 1.1s infinite';label='#eef1f6';logc='#f4c46a';}
+      else if(st==='done'){dot='width:13px;height:13px;border-radius:50%;display:inline-block;background:#37d68a;box-shadow:0 0 0 3px rgba(55,214,138,.16)';label='#eef1f6';logc='#8a929e';}
+      else{dot='width:13px;height:13px;border-radius:50%;display:inline-block;box-sizing:border-box;border:2px solid rgba(255,255,255,.2);background:transparent';label='#59616e';logc='#59616e';}
+      const line=last?'display:none':'width:2px;flex:1;min-height:20px;background:'+(st==='pending'?'rgba(255,255,255,.08)':'rgba(55,214,138,.3)')+';margin-top:3px';
+      const logText=(st==='pending')?'queued':(s.live.log[i]||'running \u2026');
+      return{label:nodeNames[i],dotStyle:dot,lineStyle:line,labelColor:label,logColor:logc,log:logText};
+    });
+    const live=this.expand(this.caseById(s.queueId));
+    const runBtnLabel=s.live.running?'Investigating\u2026':(s.live.done?'Re-run':'Investigate alert');
+    const runBtnIcon=s.live.running?'\u25d0':'\u25b6';
+    const runBtnState=s.live.running?'opacity:.7;pointer-events:none':'';
+
+    const chipStyle=(on)=>'background:'+(on?'#1d222b':'#101319')+';border:1px solid '+(on?'rgba(255,82,69,.4)':'rgba(255,255,255,.1)')+';color:'+(on?'#eef1f6':'#8a929e')+';font:500 11.5px \'IBM Plex Mono\';padding:6px 11px;border-radius:8px;cursor:pointer';
+    const askChips=this.getCases().map(c=>({id:c.id,style:chipStyle(s.askCaseId===c.id),onSelect:()=>this.setState({askCaseId:c.id})}));
+    const suggestions=['Why was this alert escalated (or cleared)?','What did the Critic verify before approving?','Explain this case to a non-technical manager in 3 sentences.'].map(t=>({text:t,onClick:()=>this.ask(t)}));
+    const thread=s.threads[s.askCaseId]||[];
+
+    // gate shared
+    const pa=s.pendingAction; const rlen=(s.rationaleText||'').trim().length; const rok=rlen>=8;
+    const confirmAction=pa?pa.action:'approved';
+    const confirmColor=confirmAction==='approved'?'#ff5245':'#37d68a';
+    const confirmStyle='display:inline-flex;align-items:center;gap:8px;border:none;font:600 13px \'IBM Plex Sans\';padding:11px 20px;border-radius:10px;'+(rok?('background:'+confirmColor+';color:#fff;cursor:pointer;box-shadow:0 5px 16px '+(confirmAction==='approved'?'rgba(255,82,69,.3)':'rgba(55,214,138,.25)')):'background:#22262e;color:#59616e;cursor:not-allowed');
+    const confirmLabel=confirmAction==='approved'?'Confirm & freeze':'Confirm & clear';
+
+    return {
+      isOverview:s.tab==='overview', isCases:s.tab==='cases', isLive:s.tab==='live', isAsk:s.tab==='ask',
+      navOverview:()=>this.setState({tab:'overview'}), navCases:()=>this.setState({tab:'cases'}), navLive:()=>this.setState({tab:'live'}), navAsk:()=>this.setState({tab:'ask'}),
+      navStyle:{overview:navBtn('overview'),cases:navBtn('cases'),live:navBtn('live'),ask:navBtn('ask')},
+      evalLabel,evalColor,evalDotStyle:evalDot,
+      agents, filters, caseRows, sel,
+      secHead,secNum,secTitle,secSub,evRow,evVal,thc,
+      queue, runLive:()=>this.runLive(), runBtnLabel, runBtnIcon, runBtnState,
+      liveIdle:!s.live.started, liveStarted:s.live.started, liveDone:s.live.done, liveNodes, live,
+      askChips, suggestions, thread, askCaseId:s.askCaseId, askInput:s.askInput,
+      onAskInput:(e)=>this.setState({askInput:e.target.value}), onAskKey:(e)=>{if(e.key==='Enter')this.ask(this.state.askInput);}, onAsk:()=>this.ask(this.state.askInput),
+      rationaleText:s.rationaleText, onRationale:(e)=>this.setState({rationaleText:e.target.value}),
+      commitGate:()=>this.commitGate(), cancelGate:()=>this.cancelGate(),
+      confirmStyle, confirmLabel, rationaleCount:rlen+' / 8 min chars', rationaleCountColor:rok?'#6fe0ac':'#6b7381',
+      hasToast:!!s.toast, toastTitle:s.toast&&s.toast.title, toastBody:s.toast&&s.toast.body, toastColor:s.toast&&s.toast.color,
+    };
+  }
+}
+</script>
+</body>
+</html>
