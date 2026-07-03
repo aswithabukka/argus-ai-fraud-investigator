@@ -11,6 +11,7 @@ ROOT = Path(__file__).parent
 DATA_DIR = ROOT / "data"
 RESULTS_DIR = ROOT / "results"
 AUDIT_DIR = RESULTS_DIR / "audit"
+CASES_DIR = RESULTS_DIR / "cases"
 PROMPTS_DIR = ROOT / "prompts"
 
 EVAL_SET_PATH = DATA_DIR / "eval_set.csv"

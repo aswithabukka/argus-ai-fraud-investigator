@@ -98,4 +98,9 @@ async def triage_alert(txn_id: int,
               {"disposition": case.disposition, "confidence": case.confidence,
                "status": case.status})
     audit.save()
+
+    # Persist the full case file (evidence, cited signals, critic verdict) so the
+    # analyst UI can render a complete report without re-running anything.
+    config.CASES_DIR.mkdir(parents=True, exist_ok=True)
+    (config.CASES_DIR / f"case_{alert.txn_id}.json").write_text(case.model_dump_json(indent=2))
     return case, audit
