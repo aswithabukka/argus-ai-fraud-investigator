@@ -63,12 +63,16 @@ function expand(c){
     : {style:'background:rgba(55,214,138,.1);border:1px solid rgba(55,214,138,.28);color:#6fe0ac',dot:'#37d68a'};
   const recBadge=isEsc?'background:rgba(255,82,69,.15);color:#ff8078':'background:rgba(55,214,138,.14);color:#6fe0ac';
 
-  // baseline chart
+  // baseline chart — always 15 baseline slots + 1 alert slot, like the design;
+  // with no prior history the slots render as minimal dashes so the alert bar
+  // keeps its one-slot width instead of flooding the card.
   const hist=c.history||[];
-  const maxV=Math.max.apply(null,hist.concat([a.amount,c.typical]));
-  const histBars=hist.map(v=>'flex:1;min-width:3px;height:'+Math.max(4,Math.round(v/maxV*56))+'px;background:rgba(255,255,255,.13);border-radius:2px 2px 0 0');
+  const noHist=!!c.noHistory||!hist.length;
+  const maxV=Math.max.apply(null,hist.concat([a.amount,c.typical||0]));
+  const slots=hist.length>=15?hist.slice(0,15):hist.concat(new Array(15-hist.length).fill(0));
+  const histBars=slots.map(v=>'flex:1;min-width:3px;height:'+Math.max(4,Math.round(v/maxV*56))+'px;background:rgba(255,255,255,.13);border-radius:2px 2px 0 0');
   const alertBarStyle='flex:1;min-width:3px;height:'+Math.max(7,Math.round(a.amount/maxV*56))+'px;background:'+rc+';border-radius:2px 2px 0 0;box-shadow:0 0 12px '+(isEsc?'rgba(255,82,69,.55)':'rgba(244,177,60,.45)');
-  const typLineStyle='position:absolute;left:0;right:0;bottom:'+Math.round(c.typical/maxV*56)+'px;border-top:1px dashed rgba(255,255,255,.26)';
+  const typLineStyle=noHist?'display:none':'position:absolute;left:0;right:0;bottom:'+Math.round(c.typical/maxV*56)+'px;border-top:1px dashed rgba(255,255,255,.26)';
   const mult=a.amount/c.typical; const multFmt=c.noHistory?'—':((mult>=10?Math.round(mult):mult.toFixed(1))+'×');
   let baselineNote;
   if(c.noHistory) baselineNote='No prior sending history — this is the account’s first recorded transaction. Freshness itself is a risk factor: fraud accounts are often brand new.';
@@ -144,6 +148,7 @@ function expand(c){
     policyRows:c.policy.map(p=>({rule:p[0],firedText:p[1]?'● FIRED':'— clear',firedColor:p[1]?'#ff5245':'#59616e',checks:p[2],values:p[3]})),
     policyVerdict:c.policyVerdict, policyVerdictColor:c.policyVerdict==='ESCALATE'?'#ff5245':'#37d68a', policyNote:c.policyNote,
     reasoning:c.reasoning, nHist:hist.length,
+    histLegend:noHist?'0 prior transactions':hist.length+' prior transaction'+(hist.length===1?'':'s')+' · - - typical',
     histBars, alertBarStyle, typLineStyle, multFmt, baselineNote,
     flow, criticPasses,
     analyzerLean, analyzerColor, agreeText, agreeIcon, agreeColor, agreeBg, agreeBorder,
@@ -414,7 +419,7 @@ function caseDetail(v){
     +'<div style="position:relative;height:64px;display:flex;align-items:flex-end;gap:3px;margin-top:16px">'
     +v.histBars.map(b=>'<span style="'+b+'"></span>').join('')
     +'<span style="'+v.alertBarStyle+'"></span><span style="'+v.typLineStyle+'"></span></div>'
-    +'<div style="display:flex;justify-content:space-between;font:400 10px \'IBM Plex Mono\';color:#6b7381;margin-top:8px"><span>'+v.nHist+' prior transactions · - - typical</span><span style="color:'+v.riskColor+'">▮ this alert</span></div>'
+    +'<div style="display:flex;justify-content:space-between;font:400 10px \'IBM Plex Mono\';color:#6b7381;margin-top:8px"><span>'+v.histLegend+'</span><span style="color:'+v.riskColor+'">▮ this alert</span></div>'
     +'<div style="font:400 12px/1.55 \'IBM Plex Sans\';color:#aab2bf;margin-top:9px">'+v.baselineNote+'</div></div>'
     +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px">'
     +[['Sender baseline',v.sender],['Counterparty',v.counter],['Velocity',v.velocity]].map(g=>'<div style="background:#101319;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:15px 16px"><div style="font:600 12px \'IBM Plex Sans\';margin-bottom:10px">'+g[0]+'</div>'+g[1].map(r=>'<div style="'+evRow+'"><span>'+esc(r[0])+'</span><span style="'+evVal+'">'+esc(r[1])+'</span></div>').join('')+'</div>').join('')
@@ -613,6 +618,10 @@ Promise.all([
   S.cases=cases; S.stats=stats;
   seedDecisions();
   if(cases.length){S.caseId=cases[0].id;S.queueId=cases[0].id;S.askCaseId=cases[0].id;}
+  // deep links: #cases / #live / #ask, optionally #cases=<txn_id>
+  const h=(location.hash||'').slice(1);
+  if(h){ const [tab,id]=h.split('='); if(['overview','cases','live','ask'].includes(tab)) S.tab=tab;
+    if(id&&caseById(id)){S.caseId=id;S.queueId=id;S.askCaseId=id;} }
   render();
 }).catch(()=>{
   document.getElementById('root').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#ff8078;font:500 14px \'IBM Plex Mono\'">could not reach the Argus backend — start it with:&nbsp;<b>uvicorn serve:app --port 8600</b></div>';

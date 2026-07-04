@@ -1,0 +1,162 @@
+{
+  "txn_id": 2359033,
+  "disposition": "ESCALATE",
+  "confidence": 0.5,
+  "summary": "Recommendation: ESCALATE (risk_score=0.95). Top signals: Suspicious Zero-Balance Activity (high); Counterparty Mule Behavior (high); Anomalous Amount (medium). Policy rules fired: large_transfer.",
+  "evidence": {
+    "txn_id": 2359033,
+    "transaction": {
+      "txn_id": 2359033,
+      "step": 190,
+      "type": "TRANSFER",
+      "amount": 739649.07,
+      "nameOrig": "C1910840764",
+      "oldbalanceOrg": 0.0,
+      "newbalanceOrig": 0.0,
+      "nameDest": "C1400262960",
+      "oldbalanceDest": 2949349.7,
+      "newbalanceDest": 3688998.77
+    },
+    "origin_baseline": {
+      "account_id": "C1910840764",
+      "n_sent": 2,
+      "mean_amount": 493365.63,
+      "median_amount": 493365.63,
+      "max_amount": 739649.07,
+      "type_counts": {
+        "CASH_OUT": 1,
+        "TRANSFER": 1
+      },
+      "first_step": 137,
+      "last_step": 190
+    },
+    "origin_history": {
+      "account_id": "C1910840764",
+      "n_found": 2,
+      "transactions": [
+        {
+          "txn_id": 2359033,
+          "step": 190,
+          "type": "TRANSFER",
+          "amount": 739649.07,
+          "nameOrig": "C1910840764",
+          "oldbalanceOrg": 0.0,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C1400262960",
+          "oldbalanceDest": 2949349.7,
+          "newbalanceDest": 3688998.77,
+          "role": "sender"
+        },
+        {
+          "txn_id": 1340776,
+          "step": 137,
+          "type": "CASH_OUT",
+          "amount": 247082.19,
+          "nameOrig": "C1910840764",
+          "oldbalanceOrg": 0.0,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C364219942",
+          "oldbalanceDest": 564047.91,
+          "newbalanceDest": 811130.1,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C1400262960",
+      "is_merchant": false,
+      "n_received": 32,
+      "total_received": 14034214.71,
+      "distinct_senders": 32,
+      "zero_balance_rate": 0.0,
+      "type_counts": {
+        "CASH_OUT": 16,
+        "CASH_IN": 11,
+        "TRANSFER": 5
+      }
+    },
+    "velocity": {
+      "account_id": "C1910840764",
+      "window_steps": 24,
+      "as_of_step": 190,
+      "txn_count": 1,
+      "total_amount": 739649.07,
+      "types": {
+        "TRANSFER": 1
+      }
+    },
+    "known_patterns": []
+  },
+  "risk_assessment": {
+    "risk_score": 0.95,
+    "signals": [
+      {
+        "name": "Suspicious Zero-Balance Activity",
+        "severity": "high",
+        "detail": "The origin account had a balance of 0.0 before the transfer and 0.0 after, which is characteristic of a 'pass-through' mule account designed to obscure the money trail.",
+        "evidence_ref": "transaction.oldbalanceOrg"
+      },
+      {
+        "name": "Counterparty Mule Behavior",
+        "severity": "high",
+        "detail": "The destination account has received 32 transfers from 32 distinct senders, a strong indicator of a fund consolidation mule.",
+        "evidence_ref": "counterparty_risk.distinct_senders"
+      },
+      {
+        "name": "Anomalous Amount",
+        "severity": "medium",
+        "detail": "The transaction amount of 739,649.07 is the largest amount ever sent from this account.",
+        "evidence_ref": "origin_baseline.max_amount"
+      }
+    ],
+    "rationale": "The risk assessment is high due to strong evidence of coordinated mule activity. The origin account exhibits classic 'pass-through' behavior, holding no balance and only serving to transfer funds. More critically, the destination account shows signs of being a consolidation mule, having received 32 payments from 32 different accounts. The fact that this is the origin account's largest transaction ever further increases the risk. This pattern strongly suggests the transaction is part of a larger fraud or money laundering operation."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "amount=739,649.07 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": false,
+        "severity": "high",
+        "detail": "amount=739,649.07 == oldbalanceOrg=0.00: False"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=0.00 -> newbalanceOrig=0.00"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "zero_balance_rate=0.0, distinct_senders=32, merchant=False"
+      }
+    ],
+    "suggested_disposition": "CLEAR",
+    "reason": "no high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": true,
+    "unsupported_claims": [],
+    "issues": [],
+    "revision_request": null
+  },
+  "matched_patterns": [],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_2359033.json",
+  "routing_tier": "elevated",
+  "routing_reason": "model (0.90) and policy (CLEAR) disagree — strong model arbitrates"
+}

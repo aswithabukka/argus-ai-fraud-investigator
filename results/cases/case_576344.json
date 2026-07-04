@@ -1,0 +1,142 @@
+{
+  "txn_id": 576344,
+  "disposition": "ESCALATE",
+  "confidence": 0.9,
+  "summary": "Recommendation: ESCALATE (risk_score=0.95). Top signals: Exact balance drain (high); Mule-like counterparty (medium). Policy rules fired: large_transfer, exact_balance_drain.",
+  "evidence": {
+    "txn_id": 576344,
+    "transaction": {
+      "txn_id": 576344,
+      "step": 30,
+      "type": "TRANSFER",
+      "amount": 236947.25,
+      "nameOrig": "C1273047168",
+      "oldbalanceOrg": 236947.25,
+      "newbalanceOrig": 0.0,
+      "nameDest": "C1636242484",
+      "oldbalanceDest": 0.0,
+      "newbalanceDest": 0.0
+    },
+    "origin_baseline": {
+      "account_id": "C1273047168",
+      "n_sent": 1,
+      "mean_amount": 236947.25,
+      "median_amount": 236947.25,
+      "max_amount": 236947.25,
+      "type_counts": {
+        "TRANSFER": 1
+      },
+      "first_step": 30,
+      "last_step": 30
+    },
+    "origin_history": {
+      "account_id": "C1273047168",
+      "n_found": 1,
+      "transactions": [
+        {
+          "txn_id": 576344,
+          "step": 30,
+          "type": "TRANSFER",
+          "amount": 236947.25,
+          "nameOrig": "C1273047168",
+          "oldbalanceOrg": 236947.25,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C1636242484",
+          "oldbalanceDest": 0.0,
+          "newbalanceDest": 0.0,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C1636242484",
+      "is_merchant": false,
+      "n_received": 11,
+      "total_received": 3577508.2,
+      "distinct_senders": 11,
+      "zero_balance_rate": 0.273,
+      "type_counts": {
+        "CASH_OUT": 5,
+        "TRANSFER": 3,
+        "CASH_IN": 3
+      }
+    },
+    "velocity": {
+      "account_id": "C1273047168",
+      "window_steps": 24,
+      "as_of_step": 30,
+      "txn_count": 1,
+      "total_amount": 236947.25,
+      "types": {
+        "TRANSFER": 1
+      }
+    },
+    "known_patterns": []
+  },
+  "risk_assessment": {
+    "risk_score": 0.95,
+    "signals": [
+      {
+        "name": "Exact balance drain",
+        "severity": "high",
+        "detail": "The transaction amount (236947.25) exactly matches the original account balance (236947.25), leaving 0.0 in the account. This is a strong indicator of an account takeover and sweep.",
+        "evidence_ref": "transaction.amount"
+      },
+      {
+        "name": "Mule-like counterparty",
+        "severity": "medium",
+        "detail": "The destination account is not a merchant and has received funds from 11 distinct senders, which are characteristics often associated with money mule accounts.",
+        "evidence_ref": "counterparty_risk.distinct_senders"
+      }
+    ],
+    "rationale": "This transaction exhibits the strongest signal of fraud: an exact-to-the-cent balance drain, completely emptying the originating account. This is highly indicative of a scripted account takeover. This strong signal is further corroborated by the characteristics of the destination account, which appears to be a money mule given it is not a merchant and has received funds from numerous distinct senders. These combined factors point to a very high probability of fraud."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "amount=236,947.25 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": true,
+        "severity": "high",
+        "detail": "amount=236,947.25 == oldbalanceOrg=236,947.25: True"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=236,947.25 -> newbalanceOrig=0.00"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "zero_balance_rate=0.273, distinct_senders=11, merchant=False"
+      }
+    ],
+    "suggested_disposition": "ESCALATE",
+    "reason": "a high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": true,
+    "unsupported_claims": [],
+    "issues": [],
+    "revision_request": null
+  },
+  "matched_patterns": [],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_576344.json",
+  "routing_tier": "standard",
+  "routing_reason": "clear-cut case (model and policy agree, outside the ambiguous band) — standard model is sufficient"
+}

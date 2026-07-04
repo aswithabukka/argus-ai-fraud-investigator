@@ -1,9 +1,0 @@
-/Users/aswithabukka/Desktop/Kaggle/argus/.venv/lib/python3.13/site-packages/google/adk/features/_feature_decorator.py:72: UserWarning: [EXPERIMENTAL] feature FeatureName.PLUGGABLE_AUTH is enabled.
-  check_feature_enabled()
-INFO:     Started server process [26388]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://127.0.0.1:8600 (Press CTRL+C to quit)
-INFO:     127.0.0.1:59869 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59871 - "GET /api/cases HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59873 - "POST /api/ask HTTP/1.1" 200 OK

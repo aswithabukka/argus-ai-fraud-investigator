@@ -1,0 +1,151 @@
+{
+  "txn_id": 5967458,
+  "disposition": "ESCALATE",
+  "confidence": 0.9,
+  "summary": "Recommendation: ESCALATE (risk_score=0.95). Top signals: Exact Balance Drain (high); Known Fraud Pattern Match (high); Mule-like Counterparty (medium). Policy rules fired: exact_balance_drain, mule_counterparty. Matches known pattern(s): CASH_OUT of the entire origin balance to the exact cent in a single move..",
+  "evidence": {
+    "txn_id": 5967458,
+    "transaction": {
+      "txn_id": 5967458,
+      "step": 406,
+      "type": "CASH_OUT",
+      "amount": 126192.63,
+      "nameOrig": "C1660121126",
+      "oldbalanceOrg": 126192.63,
+      "newbalanceOrig": 0.0,
+      "nameDest": "C39677871",
+      "oldbalanceDest": 0.0,
+      "newbalanceDest": 126192.63
+    },
+    "origin_baseline": {
+      "account_id": "C1660121126",
+      "n_sent": 1,
+      "mean_amount": 126192.63,
+      "median_amount": 126192.63,
+      "max_amount": 126192.63,
+      "type_counts": {
+        "CASH_OUT": 1
+      },
+      "first_step": 406,
+      "last_step": 406
+    },
+    "origin_history": {
+      "account_id": "C1660121126",
+      "n_found": 1,
+      "transactions": [
+        {
+          "txn_id": 5967458,
+          "step": 406,
+          "type": "CASH_OUT",
+          "amount": 126192.63,
+          "nameOrig": "C1660121126",
+          "oldbalanceOrg": 126192.63,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C39677871",
+          "oldbalanceDest": 0.0,
+          "newbalanceDest": 126192.63,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C39677871",
+      "is_merchant": false,
+      "n_received": 2,
+      "total_received": 186908.23,
+      "distinct_senders": 2,
+      "zero_balance_rate": 0.5,
+      "type_counts": {
+        "CASH_OUT": 1,
+        "CASH_IN": 1
+      }
+    },
+    "velocity": {
+      "account_id": "C1660121126",
+      "window_steps": 24,
+      "as_of_step": 406,
+      "txn_count": 1,
+      "total_amount": 126192.63,
+      "types": {
+        "CASH_OUT": 1
+      }
+    },
+    "known_patterns": [
+      "CASH_OUT of the entire origin balance to the exact cent in a single move."
+    ]
+  },
+  "risk_assessment": {
+    "risk_score": 0.95,
+    "signals": [
+      {
+        "name": "Exact Balance Drain",
+        "severity": "high",
+        "detail": "The transaction amount (126192.63) exactly matches the original balance (126192.63), emptying the account to 0.0.",
+        "evidence_ref": "transaction.amount"
+      },
+      {
+        "name": "Known Fraud Pattern Match",
+        "severity": "high",
+        "detail": "The transaction matches a known fraud pattern: 'CASH_OUT of the entire origin balance to the exact cent in a single move.'",
+        "evidence_ref": "known_patterns"
+      },
+      {
+        "name": "Mule-like Counterparty",
+        "severity": "medium",
+        "detail": "The destination account is not a merchant, has received from 2 distinct senders, and has a zero balance rate of 0.5, suggesting it may be a mule account.",
+        "evidence_ref": "counterparty_risk.is_merchant"
+      }
+    ],
+    "rationale": "The transaction exhibits the strongest fraud signal: an exact balance drain from the origin account, matching a known account-takeover pattern. This is further corroborated by the destination account's characteristics, which are indicative of a mule account (not a merchant, multiple distinct senders, high zero balance rate). These combined factors point to a very high probability of fraud."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "amount=126,192.63 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": true,
+        "severity": "high",
+        "detail": "amount=126,192.63 == oldbalanceOrg=126,192.63: True"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=126,192.63 -> newbalanceOrig=0.00"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "zero_balance_rate=0.5, distinct_senders=2, merchant=False"
+      }
+    ],
+    "suggested_disposition": "ESCALATE",
+    "reason": "a high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": true,
+    "unsupported_claims": [],
+    "issues": [],
+    "revision_request": null
+  },
+  "matched_patterns": [
+    "CASH_OUT of the entire origin balance to the exact cent in a single move."
+  ],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_5967458.json",
+  "routing_tier": "standard",
+  "routing_reason": "clear-cut case (model and policy agree, outside the ambiguous band) — standard model is sufficient"
+}

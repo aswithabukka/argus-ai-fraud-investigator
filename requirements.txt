@@ -1,4 +1,4 @@
-google-adk>=1.0.0
+google-adk>=1.0.0,<2  # 2.x removed McpToolset from google.adk.tools.mcp_tool
 google-genai>=1.0.0
 kagglehub>=0.3.0
 pandas>=2.0.0

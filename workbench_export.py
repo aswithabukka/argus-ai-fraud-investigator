@@ -124,11 +124,19 @@ def build_case(txn_id: int, truth: int | None) -> dict:
                                     f"{case.get('routing_reason', '')}"])
 
     # --- baseline history ---------------------------------------------------------
-    priors = [float(t["amount"]) for t in hist.get("transactions", [])
-              if t.get("txn_id") != txn_id][:15]
-    typical = float(base.get("median_amount") or base.get("mean_amount") or 0)
+    # The sender-baseline card describes *prior* behavior, so the alerted
+    # transaction is excluded — otherwise a single-shot PaySim account "typical"
+    # is just the alert echoing itself (typical == amount, seen 1).
+    prior_txns = [t for t in hist.get("transactions", [])
+                  if t.get("txn_id") != txn_id]
+    priors = [float(t["amount"]) for t in prior_txns][:15]
+    prior_sent = sorted(float(t["amount"]) for t in prior_txns
+                        if t["role"] == "sender")
+    n_prior_sent = max(0, int(base.get("n_sent", 0)) - 1)
+    typical = (prior_sent[len(prior_sent) // 2] if prior_sent
+               else (float(pd.Series(priors).median()) if priors else 0.0))
 
-    first = base.get("first_step")
+    first = min((int(t["step"]) for t in prior_txns), default=None)
     n_recv = cp.get("n_received") or 0
     avg_in = (cp.get("total_received") or 0) / n_recv if n_recv else 0
 
@@ -140,9 +148,9 @@ def build_case(txn_id: int, truth: int | None) -> dict:
                   "amount": float(txn["amount"]), "dest": txn["nameDest"],
                   "hour": int(txn["step"]), "before": float(txn["oldbalanceOrg"]),
                   "after": float(txn["newbalanceOrig"])},
-        "sender": [["typical amount", _money(typical) if typical else "no history"],
-                   ["largest ever sent", _money(base.get("max_amount") or 0)],
-                   ["transactions seen", str(base.get("n_sent", 0))],
+        "sender": [["typical amount", _money(typical) if prior_sent else "no prior history"],
+                   ["largest ever sent", _money(prior_sent[-1]) if prior_sent else "—"],
+                   ["transactions seen", str(n_prior_sent)],
                    ["first seen", f"hour {first}" if first is not None else "—"]],
         "counter": [["merchant", "yes" if cp.get("is_merchant") else "no"],
                     ["distinct senders in", str(fan)],

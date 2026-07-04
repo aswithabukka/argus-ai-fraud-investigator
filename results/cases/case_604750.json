@@ -1,0 +1,148 @@
+{
+  "txn_id": 604750,
+  "disposition": "ESCALATE",
+  "confidence": 0.5,
+  "summary": "Recommendation: ESCALATE (risk_score=0.98). Top signals: Anomalous Account Drain (high); Likely Mule Destination (high); First Transaction Anomaly (medium). Policy rules fired: large_transfer, near_balance_drain.",
+  "evidence": {
+    "txn_id": 604750,
+    "transaction": {
+      "txn_id": 604750,
+      "step": 34,
+      "type": "TRANSFER",
+      "amount": 1263343.86,
+      "nameOrig": "C600827445",
+      "oldbalanceOrg": 14988.0,
+      "newbalanceOrig": 0.0,
+      "nameDest": "C396370524",
+      "oldbalanceDest": 2267.0,
+      "newbalanceDest": 1907317.32
+    },
+    "origin_baseline": {
+      "account_id": "C600827445",
+      "n_sent": 1,
+      "mean_amount": 1263343.86,
+      "median_amount": 1263343.86,
+      "max_amount": 1263343.86,
+      "type_counts": {
+        "TRANSFER": 1
+      },
+      "first_step": 34,
+      "last_step": 34
+    },
+    "origin_history": {
+      "account_id": "C600827445",
+      "n_found": 1,
+      "transactions": [
+        {
+          "txn_id": 604750,
+          "step": 34,
+          "type": "TRANSFER",
+          "amount": 1263343.86,
+          "nameOrig": "C600827445",
+          "oldbalanceOrg": 14988.0,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C396370524",
+          "oldbalanceDest": 2267.0,
+          "newbalanceDest": 1907317.32,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C396370524",
+      "is_merchant": false,
+      "n_received": 23,
+      "total_received": 9819050.62,
+      "distinct_senders": 23,
+      "zero_balance_rate": 0.0,
+      "type_counts": {
+        "CASH_OUT": 10,
+        "CASH_IN": 10,
+        "TRANSFER": 3
+      }
+    },
+    "velocity": {
+      "account_id": "C600827445",
+      "window_steps": 24,
+      "as_of_step": 34,
+      "txn_count": 1,
+      "total_amount": 1263343.86,
+      "types": {
+        "TRANSFER": 1
+      }
+    },
+    "known_patterns": []
+  },
+  "risk_assessment": {
+    "risk_score": 0.98,
+    "signals": [
+      {
+        "name": "Anomalous Account Drain",
+        "severity": "high",
+        "detail": "The transaction amount of 1,263,343.86 is impossibly large compared to the starting balance of 14,988.0. However, the transaction still executed and left the origin account with an exact zero balance, which is extremely suspicious and points to a potential system exploit.",
+        "evidence_ref": "transaction.amount"
+      },
+      {
+        "name": "Likely Mule Destination",
+        "severity": "high",
+        "detail": "The destination account has received 23 payments from 23 distinct senders, which is a strong indicator of a mule account used to aggregate funds from multiple compromised sources.",
+        "evidence_ref": "counterparty_risk.distinct_senders"
+      },
+      {
+        "name": "First Transaction Anomaly",
+        "severity": "medium",
+        "detail": "This is the first-ever transaction from the origin account. A large, anomalous transfer as a first action is a common fraud pattern.",
+        "evidence_ref": "origin_baseline.n_sent"
+      }
+    ],
+    "rationale": "The risk score is extremely high due to multiple, strong, and corroborating signals of fraud. The transaction itself is anomalous, with an amount that far exceeds the available balance, yet it successfully drained the origin account to zero, suggesting a system exploit. The funds were sent to a non-merchant account that displays a classic mule pattern (23 distinct senders for 23 transactions). Finally, this was the first transaction ever made from the origin account, which is common in account takeover scenarios. The combination of these factors makes this transaction almost certainly fraudulent."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "amount=1,263,343.86 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": false,
+        "severity": "high",
+        "detail": "amount=1,263,343.86 == oldbalanceOrg=14,988.00: False"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=14,988.00 -> newbalanceOrig=0.00"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "zero_balance_rate=0.0, distinct_senders=23, merchant=False"
+      }
+    ],
+    "suggested_disposition": "CLEAR",
+    "reason": "no high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": true,
+    "unsupported_claims": [],
+    "issues": [],
+    "revision_request": null
+  },
+  "matched_patterns": [],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_604750.json",
+  "routing_tier": "elevated",
+  "routing_reason": "model (0.85) and policy (CLEAR) disagree — strong model arbitrates"
+}

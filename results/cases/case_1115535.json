@@ -1,0 +1,148 @@
+{
+  "txn_id": 1115535,
+  "disposition": "ESCALATE",
+  "confidence": 0.5,
+  "summary": "Recommendation: ESCALATE (risk_score=0.98). Top signals: Account Balance Depletion (Discrepant Amount) (high); Mule-like Counterparty (high); New Account Activity (medium). Policy rules fired: large_transfer, near_balance_drain.",
+  "evidence": {
+    "txn_id": 1115535,
+    "transaction": {
+      "txn_id": 1115535,
+      "step": 130,
+      "type": "CASH_OUT",
+      "amount": 627002.69,
+      "nameOrig": "C1592051790",
+      "oldbalanceOrg": 650.0,
+      "newbalanceOrig": 0.0,
+      "nameDest": "C196646278",
+      "oldbalanceDest": 0.0,
+      "newbalanceDest": 627002.69
+    },
+    "origin_baseline": {
+      "account_id": "C1592051790",
+      "n_sent": 1,
+      "mean_amount": 627002.69,
+      "median_amount": 627002.69,
+      "max_amount": 627002.69,
+      "type_counts": {
+        "CASH_OUT": 1
+      },
+      "first_step": 130,
+      "last_step": 130
+    },
+    "origin_history": {
+      "account_id": "C1592051790",
+      "n_found": 1,
+      "transactions": [
+        {
+          "txn_id": 1115535,
+          "step": 130,
+          "type": "CASH_OUT",
+          "amount": 627002.69,
+          "nameOrig": "C1592051790",
+          "oldbalanceOrg": 650.0,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C196646278",
+          "oldbalanceDest": 0.0,
+          "newbalanceDest": 627002.69,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C196646278",
+      "is_merchant": false,
+      "n_received": 21,
+      "total_received": 4372906.86,
+      "distinct_senders": 21,
+      "zero_balance_rate": 0.095,
+      "type_counts": {
+        "CASH_OUT": 11,
+        "CASH_IN": 7,
+        "TRANSFER": 3
+      }
+    },
+    "velocity": {
+      "account_id": "C1592051790",
+      "window_steps": 24,
+      "as_of_step": 130,
+      "txn_count": 1,
+      "total_amount": 627002.69,
+      "types": {
+        "CASH_OUT": 1
+      }
+    },
+    "known_patterns": []
+  },
+  "risk_assessment": {
+    "risk_score": 0.98,
+    "signals": [
+      {
+        "name": "Account Balance Depletion (Discrepant Amount)",
+        "severity": "high",
+        "detail": "The origin account's balance was depleted from 650.00 to 0.00. However, the transaction amount (627002.69) is significantly larger than the original balance, indicating a major discrepancy or system bypass rather than an exact balance drain.",
+        "evidence_ref": "transaction.oldbalanceOrg, transaction.newbalanceOrig, transaction.amount"
+      },
+      {
+        "name": "New Account Activity",
+        "severity": "medium",
+        "detail": "This is the first and only transaction recorded for the origin account.",
+        "evidence_ref": "origin_history.n_found"
+      },
+      {
+        "name": "Mule-like Counterparty",
+        "severity": "high",
+        "detail": "The destination account is not a merchant and has received funds from 21 distinct senders, characteristic of a potential money mule.",
+        "evidence_ref": "counterparty_risk.is_merchant, counterparty_risk.distinct_senders"
+      }
+    ],
+    "rationale": "Addressing the critic's feedback, I have added signals for account balance depletion and new account activity. The most critical signal is the complete depletion of the origin account's balance (from 650.00 to 0.00) by a transaction amount (627002.69) that is vastly larger than the original balance. This severe discrepancy, indicating a likely system bypass or data anomaly, combined with the fact that this is new account activity and the destination account exhibits characteristics of a money mule (non-merchant, many distinct senders), points to a very high probability of fraud. The risk score is high due to the extreme nature of the balance discrepancy."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "amount=627,002.69 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": false,
+        "severity": "high",
+        "detail": "amount=627,002.69 == oldbalanceOrg=650.00: False"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=650.00 -> newbalanceOrig=0.00"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "zero_balance_rate=0.095, distinct_senders=21, merchant=False"
+      }
+    ],
+    "suggested_disposition": "CLEAR",
+    "reason": "no high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": true,
+    "unsupported_claims": [],
+    "issues": [],
+    "revision_request": null
+  },
+  "matched_patterns": [],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_1115535.json",
+  "routing_tier": "elevated",
+  "routing_reason": "model (0.95) and policy (CLEAR) disagree — strong model arbitrates"
+}

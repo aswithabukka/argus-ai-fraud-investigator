@@ -1,0 +1,143 @@
+{
+  "txn_id": 5908340,
+  "disposition": "ESCALATE",
+  "confidence": 0.5,
+  "summary": "Recommendation: ESCALATE (risk_score=0.95). Top signals: Impossible Transaction with Account Drain (high); Counterparty Received from Many Distinct Senders (medium). Policy rules fired: large_transfer, near_balance_drain.",
+  "evidence": {
+    "txn_id": 5908340,
+    "transaction": {
+      "txn_id": 5908340,
+      "step": 404,
+      "type": "TRANSFER",
+      "amount": 587856.76,
+      "nameOrig": "C1931460403",
+      "oldbalanceOrg": 69340.52,
+      "newbalanceOrig": 0.0,
+      "nameDest": "C1646901300",
+      "oldbalanceDest": 6204817.99,
+      "newbalanceDest": 6792674.75
+    },
+    "origin_baseline": {
+      "account_id": "C1931460403",
+      "n_sent": 1,
+      "mean_amount": 587856.76,
+      "median_amount": 587856.76,
+      "max_amount": 587856.76,
+      "type_counts": {
+        "TRANSFER": 1
+      },
+      "first_step": 404,
+      "last_step": 404
+    },
+    "origin_history": {
+      "account_id": "C1931460403",
+      "n_found": 1,
+      "transactions": [
+        {
+          "txn_id": 5908340,
+          "step": 404,
+          "type": "TRANSFER",
+          "amount": 587856.76,
+          "nameOrig": "C1931460403",
+          "oldbalanceOrg": 69340.52,
+          "newbalanceOrig": 0.0,
+          "nameDest": "C1646901300",
+          "oldbalanceDest": 6204817.99,
+          "newbalanceDest": 6792674.75,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C1646901300",
+      "is_merchant": false,
+      "n_received": 29,
+      "total_received": 9570315.39,
+      "distinct_senders": 29,
+      "zero_balance_rate": 0.034,
+      "type_counts": {
+        "CASH_OUT": 13,
+        "CASH_IN": 9,
+        "TRANSFER": 6,
+        "DEBIT": 1
+      }
+    },
+    "velocity": {
+      "account_id": "C1931460403",
+      "window_steps": 24,
+      "as_of_step": 404,
+      "txn_count": 1,
+      "total_amount": 587856.76,
+      "types": {
+        "TRANSFER": 1
+      }
+    },
+    "known_patterns": []
+  },
+  "risk_assessment": {
+    "risk_score": 0.95,
+    "signals": [
+      {
+        "name": "Impossible Transaction with Account Drain",
+        "severity": "high",
+        "detail": "The transaction amount (587856.76) is significantly greater than the original balance (69340.52), yet the originating account's new balance is recorded as 0.0. This is an arithmetic impossibility, suggesting either a data corruption or a fraudulent transaction that bypassed balance checks. If the account truly drained to 0.0, the amount should have been 69340.52.",
+        "evidence_ref": "transaction.amount,transaction.oldbalanceOrg,transaction.newbalanceOrig"
+      },
+      {
+        "name": "Counterparty Received from Many Distinct Senders",
+        "severity": "medium",
+        "detail": "The destination account is not a merchant and has received funds from 29 distinct senders. While its zero-balance rate is low, the high number of distinct senders to a non-merchant account can be indicative of a mule.",
+        "evidence_ref": "counterparty_risk.is_merchant,counterparty_risk.distinct_senders"
+      }
+    ],
+    "rationale": "The critic stated that the starting balance in the evidence is 693,405.20, and that the transaction amount is not larger than this. However, the provided evidence bundle explicitly shows `oldbalanceOrg` as `69340.52`. Based on this figure, the transaction amount of `587856.76` *is* indeed significantly larger than the starting balance. The primary driver for the high risk score is this critical arithmetic inconsistency within the transaction record: the transaction amount (587856.76) exceeds the original balance (69340.52), yet the new balance for the originating account is recorded as zero. This indicates a severe data anomaly or a fraudulent transaction bypassing balance checks, with the effect of completely draining the account. Additionally, the non-merchant counterparty receiving from many distinct senders adds some concern, although its low zero-balance rate is not characteristic of a typical mule. There are no known fraud patterns matching this case."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "amount=587,856.76 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": false,
+        "severity": "high",
+        "detail": "amount=587,856.76 == oldbalanceOrg=69,340.52: False"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=69,340.52 -> newbalanceOrig=0.00"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "zero_balance_rate=0.034, distinct_senders=29, merchant=False"
+      }
+    ],
+    "suggested_disposition": "CLEAR",
+    "reason": "no high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": true,
+    "unsupported_claims": [],
+    "issues": [],
+    "revision_request": null
+  },
+  "matched_patterns": [],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_5908340.json",
+  "routing_tier": "elevated",
+  "routing_reason": "model (0.90) and policy (CLEAR) disagree — strong model arbitrates"
+}

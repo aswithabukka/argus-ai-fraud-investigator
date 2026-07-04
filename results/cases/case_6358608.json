@@ -1,0 +1,149 @@
+{
+  "txn_id": 6358608,
+  "disposition": "ESCALATE",
+  "confidence": 0.5,
+  "summary": "Recommendation: ESCALATE (risk_score=0.75). Top signals: Counterparty Not Merchant (high); Counterparty Zero Balance Rate (high); Near Balance Draining (medium). Policy rules fired: large_transfer, near_balance_drain.",
+  "evidence": {
+    "txn_id": 6358608,
+    "transaction": {
+      "txn_id": 6358608,
+      "step": 714,
+      "type": "TRANSFER",
+      "amount": 10000000.0,
+      "nameOrig": "C131412689",
+      "oldbalanceOrg": 10390763.24,
+      "newbalanceOrig": 390763.24,
+      "nameDest": "C1846567377",
+      "oldbalanceDest": 0.0,
+      "newbalanceDest": 0.0
+    },
+    "origin_baseline": {
+      "account_id": "C131412689",
+      "n_sent": 1,
+      "mean_amount": 10000000.0,
+      "median_amount": 10000000.0,
+      "max_amount": 10000000.0,
+      "type_counts": {
+        "TRANSFER": 1
+      },
+      "first_step": 714,
+      "last_step": 714
+    },
+    "origin_history": {
+      "account_id": "C131412689",
+      "n_found": 1,
+      "transactions": [
+        {
+          "txn_id": 6358608,
+          "step": 714,
+          "type": "TRANSFER",
+          "amount": 10000000.0,
+          "nameOrig": "C131412689",
+          "oldbalanceOrg": 10390763.24,
+          "newbalanceOrig": 390763.24,
+          "nameDest": "C1846567377",
+          "oldbalanceDest": 0.0,
+          "newbalanceDest": 0.0,
+          "role": "sender"
+        }
+      ]
+    },
+    "counterparty_risk": {
+      "account_id": "C1846567377",
+      "is_merchant": false,
+      "n_received": 1,
+      "total_received": 10000000.0,
+      "distinct_senders": 1,
+      "zero_balance_rate": 1.0,
+      "type_counts": {
+        "TRANSFER": 1
+      }
+    },
+    "velocity": {
+      "account_id": "C131412689",
+      "window_steps": 24,
+      "as_of_step": 714,
+      "txn_count": 1,
+      "total_amount": 10000000.0,
+      "types": {
+        "TRANSFER": 1
+      }
+    },
+    "known_patterns": []
+  },
+  "risk_assessment": {
+    "risk_score": 0.75,
+    "signals": [
+      {
+        "name": "Near Balance Draining",
+        "severity": "medium",
+        "detail": "Transaction amount 10,000,000.0 reduced the origin account balance from 10,390,763.24 to 390,763.24, representing a significant portion of the original balance.",
+        "evidence_ref": "transaction.amount,transaction.oldbalanceOrg,transaction.newbalanceOrg"
+      },
+      {
+        "name": "Counterparty Not Merchant",
+        "severity": "high",
+        "detail": "The destination account C1846567377 is not identified as a merchant.",
+        "evidence_ref": "counterparty_risk.is_merchant"
+      },
+      {
+        "name": "Counterparty Zero Balance Rate",
+        "severity": "high",
+        "detail": "The destination account C1846567377 has a 100% zero balance rate (1.0), indicating that funds are immediately moved out after being received.",
+        "evidence_ref": "counterparty_risk.zero_balance_rate"
+      }
+    ],
+    "rationale": "The transaction involves a near-complete drain of the origin account to a non-merchant counterparty. Critically, the destination account exhibits a 100% zero balance rate, strongly suggesting it is a mule account where funds are immediately transferred out. While not an exact balance drain, the combination of a very large transfer (representing most of the balance) to a highly suspicious counterparty significantly increases the risk."
+  },
+  "policy_result": {
+    "flags": [
+      {
+        "rule": "large_transfer",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "amount=10,000,000.00 vs threshold 200,000"
+      },
+      {
+        "rule": "exact_balance_drain",
+        "triggered": false,
+        "severity": "high",
+        "detail": "amount=10,000,000.00 == oldbalanceOrg=10,390,763.24: False"
+      },
+      {
+        "rule": "near_balance_drain",
+        "triggered": true,
+        "severity": "medium",
+        "detail": "oldbalanceOrg=10,390,763.24 -> newbalanceOrig=390,763.24"
+      },
+      {
+        "rule": "velocity_burst",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "1 outgoing txns in 24 steps"
+      },
+      {
+        "rule": "mule_counterparty",
+        "triggered": false,
+        "severity": "medium",
+        "detail": "zero_balance_rate=1.0, distinct_senders=1, merchant=False"
+      }
+    ],
+    "suggested_disposition": "CLEAR",
+    "reason": "no high-severity policy rule fired"
+  },
+  "critic_verdict": {
+    "approved": false,
+    "unsupported_claims": [],
+    "issues": [
+      "GAP: A critical signal was missed. The destination account's balance did not increase despite the large transfer (transaction.newbalanceDest is 0.0). This is a strong indicator of a passthrough/mule account.",
+      "GAP: The analyzer missed that this is the first transaction ever from the origin account (origin_baseline.n_sent is 1 and origin_baseline.first_step is the current step 714)."
+    ],
+    "revision_request": "Add two signals: 1. The destination balance did not increase post-transaction (newbalanceDest is 0.0), which is a key indicator of a passthrough account. 2. This is the first-ever transaction from the origin account."
+  },
+  "matched_patterns": [],
+  "status": "PENDING_HUMAN_APPROVAL",
+  "approver": null,
+  "audit_trail_path": "/Users/aswithabukka/Desktop/Kaggle/argus/results/audit/case_6358608.json",
+  "routing_tier": "elevated",
+  "routing_reason": "risk score 0.75 is in the ambiguous band [0.35, 0.85) — second opinion warranted"
+}
