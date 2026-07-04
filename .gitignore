@@ -8,3 +8,4 @@ results/audit/
 .DS_Store
 .ipynb_checkpoints/
 results/*.log
+presentation/
