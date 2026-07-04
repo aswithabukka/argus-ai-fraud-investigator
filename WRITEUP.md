@@ -6,7 +6,7 @@
 
 **Links:** _(fill in before submitting)_
 - Notebook: `<public Kaggle notebook URL>`
-- GitHub repo: `<public repo URL>`
+- GitHub repo: https://github.com/aswithabukka/argus-ai-fraud-investigator
 - Demo video (≤5 min): `<public YouTube URL>`
 
 **Media gallery:** cover image · architecture diagram (`docs/screenshots/architecture.png`) · workbench screenshots (overview, case file, live triage)

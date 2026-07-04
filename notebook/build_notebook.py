@@ -7,7 +7,7 @@ Kept as a builder script so the notebook is regenerable and reviewable in diff.
 import json
 from pathlib import Path
 
-GITHUB_URL = "https://github.com/aswithabukka/argus"  # <-- set to your public repo
+GITHUB_URL = "https://github.com/aswithabukka/argus-ai-fraud-investigator"
 
 
 def md(text):
