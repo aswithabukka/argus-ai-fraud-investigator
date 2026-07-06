@@ -28,13 +28,23 @@ COLUMNS = [
 ]
 
 
+def _find_csv() -> Path:
+    """Locate the PaySim CSV: prefer a Kaggle-notebook attached input (instant,
+    no network), fall back to a kagglehub download everywhere else."""
+    kaggle_input = Path("/kaggle/input")
+    if kaggle_input.exists():
+        hits = sorted(kaggle_input.glob("**/*.csv"))
+        if hits:
+            return hits[0]
+    return next(Path(kagglehub.dataset_download(PAYSIM_DATASET)).glob("*.csv"))
+
+
 def load_transactions(force_download: bool = False) -> pd.DataFrame:
     """Return the full PaySim dataframe with a stable txn_id column."""
     if config.TRANSACTIONS_PATH.exists() and not force_download:
         return pd.read_parquet(config.TRANSACTIONS_PATH)
 
-    dataset_dir = Path(kagglehub.dataset_download(PAYSIM_DATASET))
-    csv_path = next(dataset_dir.glob("*.csv"))
+    csv_path = _find_csv()
     df = pd.read_csv(csv_path, usecols=COLUMNS)
     # Row order is stable, so the index doubles as a transaction id.
     df.insert(0, "txn_id", df.index)

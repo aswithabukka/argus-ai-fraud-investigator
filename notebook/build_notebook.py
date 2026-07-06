@@ -43,7 +43,12 @@ guardrails/security (PII masking, schema validation, human gate) · observabilit
     md("""## 1. Setup
 
 Install dependencies and pull the code. The full, commented source lives in the
-GitHub repo; the notebook clones it so every agent is inspectable."""),
+GitHub repo; the notebook clones it so every agent is inspectable.
+
+> **Before running:** (1) attach the PaySim dataset via **+ Add Input →** search
+> `ealaxi/paysim1` (the loader reads it straight from `/kaggle/input` — no
+> download), (2) turn **Internet ON** in Session options (for `pip` + `git
+> clone`), and (3) add your `GOOGLE_API_KEY` under **Add-ons → Secrets**."""),
 
     code(f"""!pip install -q google-adk google-genai kagglehub mcp scikit-learn nest-asyncio pydantic
 !git clone -q {GITHUB_URL} argus_repo || echo "repo already cloned"
